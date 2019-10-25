@@ -137,33 +137,28 @@ class GCSFile:
 			except gcs.NotFoundError:
 				pass
 
-	def copy_local_to_bucket(self):
-		def upload_blob(bucket_name, source_file_name, destination_blob_name):
-			"""Uploads a file to the bucket."""
-			storage_client = storage.Client()
-			bucket = storage_client.get_bucket(bucket_name)
-			blob = bucket.blob(destination_blob_name)
+	def copy_local_to_bucket(self, source_file_name, destination_blob_name):
+		if not destination_blob_name:
+			destination_blob_name = source_file_name
 
-			blob.upload_from_filename(source_file_name)
+		blob = self.bucket.blob(destination_blob_name)
+		blob.upload_from_filename(source_file_name)
+		print('File {} uploaded to {}.'.format(
+			source_file_name,
+			destination_blob_name))
 
-			print('File {} uploaded to {}.'.format(
-				source_file_name,
-				destination_blob_name))
-		pass
+	def copy_bucket_to_local(self, source_blob_name, destination_file_name):
+		"""Downloads a blob from the bucket."""
 
-	def copy_bucket_to_local(self):
-		def download_blob(bucket_name, source_blob_name, destination_file_name):
-			"""Downloads a blob from the bucket."""
-			storage_client = storage.Client()
-			bucket = storage_client.get_bucket(bucket_name)
-			blob = bucket.blob(source_blob_name)
+		if not destination_file_name:
+			destination_file_name = source_blob_name
 
-			blob.download_to_filename(destination_file_name)
+		blob = self.bucket.blob(source_blob_name)
+		blob.download_to_filename(destination_file_name)
 
-			print('Blob {} downloaded to {}.'.format(
-				source_blob_name,
-				destination_file_name))
-		pass
+		print('Blob {} downloaded to {}.'.format(
+			source_blob_name,
+			destination_file_name))
 
 
 class GCPubSub:
@@ -177,10 +172,6 @@ class GCPubSub:
 	def get_message(self):
 		message = 'default message'
 		return message
-
-class GCFunction:
-	def __init__(self):
-		pass
 
 
 '''
@@ -197,4 +188,23 @@ if __name__ == "__main__":
 	else:
 		print("oh, I'm gonna display alright")
 
-	test_gcs = GCSFile()
+# Test 1 copy a file from local drive to a bucket and back
+	gcs_file = GCSFile()
+	orig_local_file_name = 'local_testfile'
+	bucket_file_name = 'bucket_testfile'
+	new_local_file_name = 'new_local_testfile'
+
+	with open(orig_local_file_name, 'w') as f:
+		f.write('1')
+
+	gcs_file.copy_local_to_bucket(orig_local_file_name, bucket_file_name)
+	gcs_file.copy_bucket_to_local(bucket_file_name, new_local_file_name)
+
+	with open(new_local_file_name, 'r') as f:
+		file_contents = f.read()
+		print(file_contents)
+
+# Test 2 publish a message to a topic
+
+# Test 3 pull a message from a topic
+
