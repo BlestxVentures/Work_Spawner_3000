@@ -173,7 +173,7 @@ class GCPubSub:
 
 	def __init__(self, topic=None):
 		if topic is None:
-			self.topic = config.topic_name
+			self.topic_name = config.topic_name
 
 		self.publisher = pubsub_v1.PublisherClient()
 		self.topic_path = self.publisher.topic_path(config.project_id, self.topic_name)
