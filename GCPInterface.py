@@ -23,7 +23,7 @@ score a set of work files so they can be prioritized on the queue
 publish to a gcp topic
 pull from a gcp topic
 https://cloud.google.com/pubsub/docs/publisher
-
+https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/pubsub/cloud-client/publisher.py
 
 read from topic file and create topics if don't exist
 # how to use it in APP Engine
@@ -35,11 +35,16 @@ read from topic file and create topics if don't exist
 
 '''
 
-
+# standard python stuff
 import argparse
 import logging
 import os
+
+# google cloud specific
 from google.cloud import storage
+from google.cloud import pubsub_v1
+
+# local config for project
 import config
 
 
@@ -161,13 +166,22 @@ class GCSFile:
 			destination_file_name))
 
 
-class GCPubSub:
-	def __init__(self):
-		pass
 
+
+class GCPubSub:
+	"""Publishes multiple messages to a Pub/Sub topic with an error handler."""
+
+	def __init__(self, topic=None):
+		if topic is None:
+			self.topic = config.topic_name
+
+		self.publisher = pubsub_v1.PublisherClient()
+		self.topic_path = self.publisher.topic_path(config.project_id, self.topic_name)
 
 	def publish_message(self, message):
-		pass
+		# When you publish a message, the client returns a future.
+		future = self.publisher.publish( self.topic_path, data=message.encode('utf-8'))  # data must be a bytestring.
+		print(future.result())
 
 	def get_message(self):
 		message = 'default message'
@@ -205,6 +219,10 @@ if __name__ == "__main__":
 		print(file_contents)
 
 # Test 2 publish a message to a topic
+
+	gc_pubsub = GCPubSub()
+	gc_pubsub.publish_message("test message 1")
+	gc_pubsub.publish_message("test message 2")
 
 # Test 3 pull a message from a topic
 

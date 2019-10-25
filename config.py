@@ -1,6 +1,9 @@
 import os
 import datetime
 
+# name of the project where resources are
+project_id = "work-spawner-3000"
+topic_name = "priority-1"  #default pub/sub topic name
 
 # name of the bucket where work files will be stored long term
 bucket_name = 'ws-proto-bucket-1'
