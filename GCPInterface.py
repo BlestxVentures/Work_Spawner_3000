@@ -253,3 +253,5 @@ if __name__ == "__main__":
 
 	message = gc_pubsub.pull_message()
 	print(message)
+
+	print('done with tests')
