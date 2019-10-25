@@ -182,7 +182,8 @@ class GCPubSub:
 
 	def publish_message(self, message):
 		# When you publish a message, the client returns a future.
-		future = self.publisher.publish(self.topic_path, data=message.encode('utf-8'))  # data must be a bytestring.
+		future = self.publisher.publish(self.topic_path, data=message.encode('utf-8'),
+										attr='attribute 1', attr2='attribute 2')  # data must be a bytestring.
 		print(future.result())
 
 	def pull_message(self):
