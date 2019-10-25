@@ -24,6 +24,8 @@ publish to a gcp topic
 pull from a gcp topic
 https://cloud.google.com/pubsub/docs/publisher
 https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/pubsub/cloud-client/publisher.py
+https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/pubsub/cloud-client/subscriber.py
+
 
 read from topic file and create topics if don't exist
 # how to use it in APP Engine
@@ -180,11 +182,34 @@ class GCPubSub:
 
 	def publish_message(self, message):
 		# When you publish a message, the client returns a future.
-		future = self.publisher.publish( self.topic_path, data=message.encode('utf-8'))  # data must be a bytestring.
+		future = self.publisher.publish(self.topic_path, data=message.encode('utf-8'))  # data must be a bytestring.
 		print(future.result())
 
-	def get_message(self):
-		message = 'default message'
+	def pull_message(self):
+		project_id = config.project_id
+		subscription_name = config.subscription_name
+
+		subscriber = pubsub_v1.SubscriberClient()
+		subscription_path = subscriber.subscription_path(
+			project_id, subscription_name)
+
+		NUM_MESSAGES = 1  # make sure only pull one message a time since long running
+
+		# The subscriber pulls a specific number of messages.
+		response = subscriber.pull(subscription_path, max_messages=NUM_MESSAGES)
+
+		ack_ids = []
+		for received_message in response.received_messages:
+			print("Received: {}".format(received_message.message.data))
+			ack_ids.append(received_message.ack_id)
+			message = received_message
+
+		# Acknowledges the received messages so they will not be sent again.
+		subscriber.acknowledge(subscription_path, ack_ids)
+
+		print('Received and acknowledged {} messages. Done.'.format(
+			len(response.received_messages)))
+
 		return message
 
 
@@ -226,3 +251,5 @@ if __name__ == "__main__":
 
 # Test 3 pull a message from a topic
 
+	message = gc_pubsub.pull_message()
+	print(message)
