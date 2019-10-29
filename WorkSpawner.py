@@ -7,6 +7,7 @@ import time
 from subprocess import Popen
 from datetime import datetime
 import logging
+import argparse
 
 #  Local modules
 import WorkSpawnerConfig
@@ -28,9 +29,17 @@ class Message:
 		self.acknowledged = False
 
 	def __repr__(self):
-		return "attributes: " + self.attributes + "\n" + "Body: " + str(self.body)
+		attr_string = ""
+		repr_string = ""
+		for key in self.attributes:
+			attr_string += str(', attr_key:' + str(key) + ' ' + str(self.attributes[key]))
+
+		repr_string = 'message: ' + str(self.body)
+		repr_string += attr_string
+		return repr_string
 
 	def ack(self):
+		#TODO: will need the topic so can make sure it is popped off.
 		self.acknowledged = True  # whether message has been acknowledge to pub/sub queue
 
 
@@ -45,19 +54,39 @@ class PubSub:
 			attributes: dictionary list of attributes to send along with the body
 			body: assumed binary data of message to pass to/from work
 		"""
-		if self.queue[topic] is None:
+		try:
+			self.queue[topic]  # if a queue hasn't been created yet, create one
+		except KeyError:
 			self.queue[topic] = []
 
-		self.queue[topic].append(Message(attributes, body))
+		message = Message(attributes, body)
+		self.queue[topic].append(message)
+
+		# for debugging only
+		debug_msg = 'Queuing-> ' + str(message) + ' to topic: ' + str(topic)
+		logging.debug(debug_msg)
 
 	def pull(self, topic, max_message_count=1):
 		"""	topic: the topic to pull a message from
 			max_message_count: how many messages to process in a given call
 		"""
-		if topic in self.queue:
-			return self.queue[:max_message_count]  # return a list of message for this topic
-		else:
-			return None
+		try:
+			self.queue[topic]  # see if there is a queue for a topic
+		except KeyError:
+			return None  # no such topic
+
+		messages = self.queue[topic]  # list of messages for this topic
+
+		messages_to_return = messages[:max_message_count]
+
+		# for debugging only
+		debug_msg = ''
+		for message in messages_to_return:
+			debug_msg += 'DeQueuing-> ' + str(message) + ' from topic: ' + str(topic)
+
+		logging.debug(debug_msg)
+
+		return messages[:max_message_count]  # return a subset of those messages
 
 
 class Spawner:
@@ -65,44 +94,57 @@ class Spawner:
 	def __init__(self):
 		self.subprocess = None
 
-	def pre_process(self):  # things that need to be done before processing work
-		pass
+	def pre_process(self, message):  # things that need to be done before processing work
+		MyWork.pre_process(message)
 
-	def post_process(self):  # things that need to be done after the work is complete
-		pass
+	def post_process(self, message):  # things that need to be done after the work is complete
+		MyWork.post_process(message)
 
-	def process_work(self):  # default stub
-		pass
+	def get_work_cmd(self, message):
+		return MyWork.get_work_cmd(message)
 
-	def spawn_docker(self, docker_id, docker_args, payload):
-		self.subprocess = Popen(['docker', 'run', '--rm', docker_id].extend(docker_args))
+	def spawn_docker(self, docker_id, attributes, body):
+		cmd = ['docker', 'run', '--rm', docker_id]
+		logging.debug('Docker cmd: ' + str(cmd))
+		self.subprocess = Popen(cmd)
 
-	def spawn_shell(self, payload):
+	def spawn_shell(self, message):
 		"""	payload: gets passed to the process"""
-		self.subprocess = Popen(['main.py'])
+		cmd = self.get_work_cmd(message)
 
-	def terminate(self, timeout=None):
-
-		if timeout is None:
-			timeout = 0  # infinite
-
-		if self.subprocess:
-			self.subprocess.terminate()
-
-			exit_code = self.wait(timeout=10)
-
-			if timeout <= 0:
-				self.subprocess.kill()
+		logging.debug('shell cmd: ' + str(cmd))
+		self.subprocess = Popen(cmd)  # default hook to start work.
+		logging.info('spawned subprocess: ' + str(self.subprocess.pid))
 
 	def wait(self, timeout):
-		exitcode = None
-		while not exitcode and timeout:  # returns None if the process is still running
-			timeout -= 1
-			time.sleep(1)
-			exitcode = self.subprocess.poll()
+		"""wait for a subprocess to be done or it times out
+		:param timeout: number of seconds to wait for work to be done, otherwise stop. if zero, will wait forever
+		:return: exitcode of the subprocess or -1 if timed out
+		"""
+		if timeout:
+			tracking_timeout = True
+			timeout_ctr = timeout
+		else:
+			tracking_timeout = False
+			timeout_ctr = 0
 
-		if timeout <= 0:
-			exitcode = self.subprocesss.terminate(10)
+		process_done = False
+
+		while not process_done:
+			timeout_ctr -= 1  # decrement the timeout counter
+			time.sleep(1)
+
+			rc = self.subprocess.poll()  # returns None if not done, else returns error code from subprocess
+			if rc is None:  # process isn't done
+				continue  # the while loop
+			else:  # process completed and returned a return code
+				exitcode = rc
+				process_done = True
+
+			if tracking_timeout and timeout_ctr <= 0:
+				exitcode = self.subprocess.terminate()
+				if not exitcode:  # even if successfully terminated, return an error due to time out
+					return -1
 
 		return exitcode
 
@@ -124,7 +166,9 @@ class CloudStore:
 		return self.topics
 
 
-if __name__ == "__main__":
+
+
+def work_spawner(test=False):
 
 	def signal_handler(self, sig, frame):
 		spawner.terminate(10)
@@ -142,40 +186,69 @@ if __name__ == "__main__":
 	topics = store.get_topics()
 	index = 0  # index into the list of topics
 
+	if test:  # if in test mode put some dummy data on the queue
+		for topic in topics:
+			attributes = {1: "attr1", 2: "attr2"}
+			body = "sample body text"
+			queue.publish(topic, attributes, body)
+
 	while True:
 
-		if index >= len(topics):
+		if index >= len(topics):  # must have gone through all of the topics without finding work
 			logging.info("No work found")
 			index = 0  # reset the index for next time checking for work
-			time.sleep(60)  # if reached the end of the topics and there was no work, then sleep for a while
+			time.sleep(10)  # if reached the end of the topics and there was no work, then sleep for a while
 			continue  # restart the while loop
 
-		# Get a topic from a list of topics
+		# Get the next topic from a list of topics
 		topic = topics[index]  # constrains the index to be inside of topics
-		logging.debug(topic)
+		logging.debug('Topic being used: ' + topic)
 
-		message = queue.pull(topic, 1)
-		logging.debug('message' + message + 'pulled from: ' + topic)
+		messages = queue.pull(topic, 1)
 
-		# If we got any messages, spawn a docker container
-		# When the container exits, start over with the highest
-		# priority topic
-		if message:
-			spawner.pre_process()
+		if not messages:  # if there are no messages on that queue, move to next one.
+			index += 1  # Move to lower priority topic if no message
+			continue
+		else:  # If we received and processed a message, reset back to the highest priority topic
+			index = 0
 
+		# If we got any messages, spawn a subprocess to handle each message in order received
+		# then start over with the highest priority topic again
+		for message in messages:  # loop through all of the messages and process each one
+			logging.debug('message: ' + str(message.body) + ' pulled from: ' + str(topic))
+
+			# perform any work that needs to be done before spawned. e.g., copying files etc.
+			spawner.pre_process(message)
+
+			# if there is a docker_id in the attributes, use it to spawn a docker file
 			if 'docker_id' in message.attributes:
 				docker_id = message.attributes['docker_id']
 				del message.attributes['docker_id']
 
-				if spawner.spawn_docker(docker_id, message.attributes, message.body):
-					message.ack()  # only acknowledge the message if successfully processed
+				# spawn as a sub process
+				spawner.spawn_docker(docker_id, message.attributes, message.body)
+			else:
+				# spawn as a shell process
+				spawner.spawn_shell(message)
 
-				spawner.wait(5 * 60)
+			# wait for the subprocess to error or time out
+			if spawner.wait(WorkSpawnerConfig.WAIT_TIMEOUT):  # wait this many seconds at most to finish
+				logging.error('worker errored or timedout')
+			else:
+				message.ack()  # only acknowledge the message if successfully processed
+				logging.debug('work finished successfully')
 
-			spawner.post_process()
+			spawner.post_process(message)
 
-			# If we received and processed a message, reset back to the
-			# highest priority topic
-			index = 0
-		else:
-			index += 1  # Move to lower priority topic if no message
+
+if __name__ == "__main__":
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--test", help="run and generate dummy data to work on", action="store_true")
+
+	args = parser.parse_args()
+
+	testing = args.test
+	testing = True
+	work_spawner(testing)  # if the test flag is passed put in test mode
+
