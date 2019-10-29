@@ -2,6 +2,11 @@
 # wrapper function that are needed to run a simulation on GCP (e.g., webserver requests etc)
 # message queue interfaces for triggering functions from a message queue
 
+import logging
+logging.basicConfig(format='%(process)d: %(asctime)s: %(levelname)s: %(funcName)s: %(message)s', level=logging.INFO)
+
+
+
 '''
 Requirements
 
@@ -61,7 +66,7 @@ class GCSFile:
 		buckets = storage_client.list_buckets()
 
 		for bucket in buckets:
-			print(bucket.name)
+			logging.debug(bucket.name)
 
 	def get_default_bucket(self):
 		storage_client = storage.Client()
@@ -150,7 +155,7 @@ class GCSFile:
 
 		blob = self.bucket.blob(destination_blob_name)
 		blob.upload_from_filename(source_file_name)
-		print('File {} uploaded to {}.'.format(
+		logging.info('File {} uploaded to {}.'.format(
 			source_file_name,
 			destination_blob_name))
 
@@ -163,7 +168,7 @@ class GCSFile:
 		blob = self.bucket.blob(source_blob_name)
 		blob.download_to_filename(destination_file_name)
 
-		print('Blob {} downloaded to {}.'.format(
+		logging.info('Blob {} downloaded to {}.'.format(
 			source_blob_name,
 			destination_file_name))
 
@@ -184,7 +189,7 @@ class GCPubSub:
 		# When you publish a message, the client returns a future.
 		future = self.publisher.publish(self.topic_path, data=message.encode('utf-8'),
 										attr='attribute 1', attr2='attribute 2')  # data must be a bytestring.
-		print(future.result())
+		logging.debug(future.result())
 
 	def pull_message(self):
 		project_id = config.project_id
@@ -201,14 +206,14 @@ class GCPubSub:
 
 		ack_ids = []
 		for received_message in response.received_messages:
-			print("Received: {}".format(received_message.message.data))
+			logging.debug("Received: {}".format(received_message.message.data))
 			ack_ids.append(received_message.ack_id)
 			message = received_message
 
 		# Acknowledges the received messages so they will not be sent again.
 		subscriber.acknowledge(subscription_path, ack_ids)
 
-		print('Received and acknowledged {} messages. Done.'.format(
+		logging.info('Received and acknowledged {} messages. Done.'.format(
 			len(response.received_messages)))
 
 		return message
@@ -224,9 +229,9 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 
 	if args.nodisplay:
-		print("no display")
+		logging.info("no display")
 	else:
-		print("oh, I'm gonna display alright")
+		logging.info("oh, I'm gonna display alright")
 
 # Test 1 copy a file from local drive to a bucket and back
 	gcs_file = GCSFile()
@@ -242,7 +247,7 @@ if __name__ == "__main__":
 
 	with open(new_local_file_name, 'r') as f:
 		file_contents = f.read()
-		print(file_contents)
+		logging.debug(file_contents)
 
 # Test 2 publish a message to a topic
 
@@ -253,6 +258,6 @@ if __name__ == "__main__":
 # Test 3 pull a message from a topic
 
 	message = gc_pubsub.pull_message()
-	print(message)
+	logging.debug(message)
 
-	print('done with tests')
+	logging.info('done with tests')

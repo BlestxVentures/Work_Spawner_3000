@@ -178,7 +178,7 @@ def work_spawner(test=False):
 	signal.signal(signal.SIGINT, signal_handler)
 
 	spawner = Spawner()
-	queue = PubSub()
+	queue = MyWork.PubSubFactory.get_cloud_specfic()
 	store = CloudStore()
 
 	# always load the topics in case they have changed
