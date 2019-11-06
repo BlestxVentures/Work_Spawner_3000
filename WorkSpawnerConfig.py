@@ -8,6 +8,9 @@ logging.basicConfig(format='%(process)d: %(asctime)s: %(levelname)s: %(funcName)
 #TOPIC_FILE = "ws-proto-bucket-1/topics.csv"
 TOPIC_FILE = 'GCPTopics.csv'
 
+# name of topic to look for work to prioritize
+priority_topic_name = "work-to-prioritize"
+
 # how long to wait for work before timing out
 WAIT_TIMEOUT = 60
 

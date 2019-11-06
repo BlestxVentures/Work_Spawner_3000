@@ -2,7 +2,13 @@ import os
 import datetime
 
 # name of the project where resources are
+# TODO: use this to get project_id
+#  curl "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google"
+# compute = googleapiclient.discovery.build('compute', 'v1')
+# https://cloud.google.com/compute/docs/reference/rest/v1/projects/get
+
 project_id = "work-spawner-3000"
+
 topic_name = "priority-1"  # default pub/sub topic name
 subscription_name = topic_name  # default subscription name matches topic
 

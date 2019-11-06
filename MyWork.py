@@ -2,6 +2,8 @@
 import logging
 import time
 import argparse
+import random
+
 
 # cloud imports
 from google.cloud import pubsub_v1
@@ -31,26 +33,23 @@ class PubSub_GCP(WorkSpawner.PubSub):
 
 		self.subscriber = pubsub_v1.SubscriberClient()
 
-	def get_subscriptions_in_topic(self, topic):
-		subscriptions = self.publisher.list_topic_subscriptions(topic)
-		return subscriptions
-
 	def get_subscription(self, topic):
 
 		# strip topic_id from the topic of the form:
 		# projects/[project_id]/topics/topic_id
 		# and assume there is a matching subscription by that name
 		# projects/[project_id]/subscriptions/topic_id
-		subscription_list = self.get_subscriptions_in_topic(topic)
+		subscription_list = self.publisher.list_topic_subscriptions(topic)
+
 		try:
 			subscription = subscription_list[0]
 			subscription_name = subscription.name
 		except KeyError:
 			subscription_name = ''
 
-		try:
+		try:  # see if already created the subscription path
 			subscription_path = self.subscriptions[topic]
-		except KeyError:
+		except KeyError:  # create the subscription and add to local dictionary
 			subscription_path = self.subscriber.subscription_path(self.project_id, subscription_name)
 			self.subscriptions[topic] = subscription_path
 
@@ -81,13 +80,13 @@ class PubSub_GCP(WorkSpawner.PubSub):
 			message = received_message
 
 		# Acknowledges the received messages so they will not be sent again.
+		# TODO: move this to after the message has been processed successfully
 		self.subscriber.acknowledge(subscription_path, self.ack_ids)
 
 		logging.info('Received and acknowledged {} messages. Done.'.format(
 			len(response.received_messages)))
 
 		return message
-
 
 
 class PubSubFactory:
@@ -128,6 +127,14 @@ def get_work_cmd(message):  # default stub
 	# unpack the payload and do any work that needs to be done
 	cmd_to_run = ['python', 'MyWork.py', '--test']  # needs to be something Popen can run.
 	return cmd_to_run
+
+
+def prioritize(message):  # where the prioritization happens based on the message
+	logging.debug(message)
+	random.randint()
+	rand_int = random.randint(1, 10)
+	logging.debug('generating a randomd score of: ' + str(rand_int))
+	return rand_int
 
 if __name__ == "__main__":
 

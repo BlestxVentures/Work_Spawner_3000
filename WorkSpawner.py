@@ -30,7 +30,6 @@ class Message:
 
 	def __repr__(self):
 		attr_string = ""
-		repr_string = ""
 		for key in self.attributes:
 			attr_string += str(', attr_key:' + str(key) + ' ' + str(self.attributes[key]))
 
@@ -43,8 +42,8 @@ class Message:
 		self.acknowledged = True  # whether message has been acknowledge to pub/sub queue
 
 
-#  This class encapsulates the PubSub functionality needed for the Work Spawner
-class PubSub:
+#  This class encapsulates the PubSub functionality needed
+class PubSub:  # base class that describes the implementation independent interface
 
 	def __init__(self):
 		self.queue = {}  # a dictionary of all of the topics the PubSub will communicate with
@@ -149,8 +148,23 @@ class Spawner:
 		return exitcode
 
 
+class Prioritizer:
+
+	def __init_(self):
+		pass
+
+	def terminate(self, secs):
+		logging.info('Terminating in '+ str(secs), + ' seconds')
+
+	def prioritize(self, message):
+		return MyWork.prioritize(message)
+
+
+
+
 #  Class to load the configuration for the pub/sub topics
-class CloudStore:
+
+class CloudStore:  # defines implementation independent interface
 
 	def __init__(self):
 		self.topic_reader = TopicReader.Topics()
@@ -165,7 +179,8 @@ class CloudStore:
 		# ordered list of topics
 		return self.topics
 
-
+	def get_topic(self,score):
+		return self.topic_reader.get_topic(score)
 
 
 def work_spawner(test=False):
@@ -241,14 +256,63 @@ def work_spawner(test=False):
 			spawner.post_process(message)
 
 
+def work_prioritizer(testing):
+	def signal_handler(self, sig, frame):
+		prioritizer.terminate(10)
+		sys.exit(0)
+
+	# handle CTRL-C to stop subprocess
+	signal.signal(signal.SIGINT, signal_handler)
+
+	prioritizer = Prioritizer()
+	queue = MyWork.PubSubFactory.get_cloud_specfic()
+	store = CloudStore()
+
+	# always load the topics in case they have changed
+	# topics are arranged highest to lowest
+	topics = store.get_topics()
+
+	priority_topic = WorkSpawnerConfig.priority_topic_name
+
+	while True:
+
+		# pull next work to prioritize
+		messages = queue.pull(priority_topic, 1)
+
+		if not messages:  # if there are no messages on that queue, move to next one.
+			logging.debug('no work found on prioritization queue')
+			time.sleep(10)
+			continue
+
+		# If we got any messages
+		for message in messages:  # loop through all of the messages and process each one
+			logging.debug('message: ' + str(message.body) + ' pulled from: ' + str(priority_topic))
+
+			# perform any work that needs to be done before spawned. e.g., copying files etc.
+			score = prioritizer.prioritize(message)
+			topic_to_publish_on = store.get_topic(score)
+			if topic_to_publish_on:
+				queue.publish(topic_to_publish_on, message.attributes, message.body)
+			else:
+				logging.error('could not find a topic to send work to for score: ' + str(score))
+
+
 if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--test", help="run and generate dummy data to work on", action="store_true")
+	parser.add_argument("--spawner", help="run the work spawner daemon", action="store_true")
+	parser.add_argument("--prioritizer", help="run the work prioritizer daemon", action="store_true")
 
+	# get the args
 	args = parser.parse_args()
 
 	testing = args.test
-	testing = True
-	work_spawner(testing)  # if the test flag is passed put in test mode
+
+	if args.spawner:
+		work_spawner(testing)  # if the test flag is passed put in test mode
+	elif args.prioritizer:
+		work_prioritizer(testing)
+	else:
+		logging.error("Need to specify --spawner or --prioritizer")
 
