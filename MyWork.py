@@ -35,23 +35,25 @@ class PubSub_GCP(WorkSpawner.PubSub):
 
 	def get_subscription(self, topic):
 
-		# strip topic_id from the topic of the form:
-		# projects/[project_id]/topics/topic_id
-		# and assume there is a matching subscription by that name
-		# projects/[project_id]/subscriptions/topic_id
+		# see if have already looked up the subscription
+		try:
+			subscription_path = self.subscriptions[topic]
+			return subscription_path
+		except KeyError:
+			pass  # continue to the rest of the function
+
+		# get the current subscriptions for the topic
 		subscription_list = self.publisher.list_topic_subscriptions(topic)
 
-		try:
+		try:  # get the first one...should only be one
 			subscription = subscription_list[0]
 			subscription_name = subscription.name
 		except KeyError:
-			subscription_name = ''
+			logging.error('Could not find a subscription for topic: ' + topic)
+			exit(-1)
 
-		try:  # see if already created the subscription path
-			subscription_path = self.subscriptions[topic]
-		except KeyError:  # create the subscription and add to local dictionary
-			subscription_path = self.subscriber.subscription_path(self.project_id, subscription_name)
-			self.subscriptions[topic] = subscription_path
+		subscription_path = self.subscriber.subscription_path(self.project_id, subscription_name)
+		self.subscriptions[topic] = subscription_path
 
 		return subscription_path
 
