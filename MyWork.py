@@ -42,26 +42,30 @@ class PubSub_GCP(WorkSpawner.PubSub):
 			return subscription_path
 		except KeyError:
 			pass  # continue to the rest of the function
+		
+#		subscription_path = self.subscriber.subscription_path(self.project_id, subscription_name)
+		subscription_path = self.subscriber.subscription_path(self.project_id, topic)
 
-		# get the current subscriptions for the topic
-		publisher = pubsub_v1.PublisherClient()
-		topic_path = publisher.topic_path(WorkSpawnerConfig.project_id, topic)
-		subscription_list = self.publisher.list_topic_subscriptions(topic_path)
-
-		try:  # get the first one...should only be one
-			for subscription in subscription_list:
-				subscription_name = subscription.name
-			logging.debug("Subscription_name: " + subscription_name)
-		except KeyError:
-			logging.error('Could not find a subscription for topic: ' + topic)
-			exit(-1)
-
-		subscription_path = self.subscriber.subscription_path(self.project_id, subscription_name)
 		logging.debug("subscription_path: " + subscription_path)
 
 		self.subscriptions[topic] = subscription_path
 
 		return subscription_path
+
+	'''
+			# get the current subscriptions for the topic
+			publisher = pubsub_v1.PublisherClient()
+			topic_path = publisher.topic_path(WorkSpawnerConfig.project_id, topic)
+			subscription_list = self.publisher.list_topic_subscriptions(topic_path)
+
+			try:  # get the first one...should only be one
+				for subscription in subscription_list:
+					subscription_name = subscription.name
+				logging.debug("Subscription_name: " + subscription_name)
+			except KeyError:
+				logging.error('Could not find a subscription for topic: ' + topic)
+				exit(-1)
+	'''
 
 	def publish(self, topic, attributes, body):
 		""" Publish a message body and attributes to a topic in a PubSub environment
