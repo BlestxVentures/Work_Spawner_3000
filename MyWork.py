@@ -82,6 +82,7 @@ class PubSub_GCP(WorkSpawner.PubSub):
 
 	def pull(self, topic, max_message_count=1):
 
+		messages = []
 		# The subscriber pulls a specific number of messages.
 		subscription_path = self.get_subscription(topic)
 		response = self.subscriber.pull(subscription_path, max_messages=max_message_count)
@@ -89,7 +90,7 @@ class PubSub_GCP(WorkSpawner.PubSub):
 		for received_message in response.received_messages:
 			logging.debug("Received: {}".format(received_message.message.data))
 			self.ack_ids.append(received_message.ack_id)
-			message = received_message
+			messages.append(WorkSpawner.Message(received_message.message.attributes,received_message.message.data))
 
 		# Acknowledges the received messages so they will not be sent again.
 		# TODO: move this to after the message has been processed successfully
@@ -98,7 +99,7 @@ class PubSub_GCP(WorkSpawner.PubSub):
 		logging.info('Received and acknowledged {} messages. Done.'.format(
 			len(response.received_messages)))
 
-		return response.received_messages
+		return messages
 
 
 class PubSubFactory:
