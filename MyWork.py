@@ -44,7 +44,9 @@ class PubSub_GCP(WorkSpawner.PubSub):
 			pass  # continue to the rest of the function
 
 		# get the current subscriptions for the topic
-		subscription_list = self.publisher.list_topic_subscriptions(topic)
+		publisher = pubsub_v1.PublisherClient()
+		topic_path = publisher.topic_path(WorkSpawnerConfig.project_id, topic)
+		subscription_list = self.publisher.list_topic_subscriptions(topic_path)
 
 		try:  # get the first one...should only be one
 			for subscription in subscription_list:
