@@ -15,7 +15,7 @@ priority_topic_name = "work-to-prioritize"
 WAIT_TIMEOUT = 60
 
 # should run in test mode and not use actual cloud functions
-TEST_MODE = True
+TEST_MODE = False
 
 # GC Project id...TODO: replace this by getting the metadata
 project_id = "work-spawner-3000"

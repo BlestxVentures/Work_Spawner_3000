@@ -309,6 +309,8 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 
 	testing = args.test
+	if testing:
+		logging.debug('In test mode')
 
 	if args.spawner:
 		work_spawner(testing)  # if the test flag is passed put in test mode
