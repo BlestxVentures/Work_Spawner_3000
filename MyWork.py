@@ -35,6 +35,7 @@ class PubSub_GCP(WorkSpawner.PubSub):
 
 	def get_subscription(self, topic):
 
+		logging.debug("Looking up subscriptions for topic: " + topic)
 		# see if have already looked up the subscription
 		try:
 			subscription_path = self.subscriptions[topic]
@@ -48,11 +49,14 @@ class PubSub_GCP(WorkSpawner.PubSub):
 		try:  # get the first one...should only be one
 			subscription = subscription_list[0]
 			subscription_name = subscription.name
+			logging.debug("Subscription_name: " + subscription_name)
 		except KeyError:
 			logging.error('Could not find a subscription for topic: ' + topic)
 			exit(-1)
 
 		subscription_path = self.subscriber.subscription_path(self.project_id, subscription_name)
+		logging.debug("subscription_path: " + subscription_path)
+
 		self.subscriptions[topic] = subscription_path
 
 		return subscription_path
