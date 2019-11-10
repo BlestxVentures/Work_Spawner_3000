@@ -42,7 +42,7 @@ class PubSub_GCP(WorkSpawner.PubSub):
 			return subscription_path
 		except KeyError:
 			pass  # continue to the rest of the function
-		
+
 #		subscription_path = self.subscriber.subscription_path(self.project_id, subscription_name)
 		subscription_path = self.subscriber.subscription_path(self.project_id, topic)
 
@@ -98,7 +98,7 @@ class PubSub_GCP(WorkSpawner.PubSub):
 		logging.info('Received and acknowledged {} messages. Done.'.format(
 			len(response.received_messages)))
 
-		return message
+		return response.received_messages
 
 
 class PubSubFactory:
