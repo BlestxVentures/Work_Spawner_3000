@@ -277,6 +277,7 @@ def work_prioritizer(testing):
 	while True:
 
 		# pull next work to prioritize
+		logging.debug('Pulling work from priority_topic: ' + priority_topic)
 		messages = queue.pull(priority_topic, 1)
 
 		if not messages:  # if there are no messages on that queue, move to next one.
