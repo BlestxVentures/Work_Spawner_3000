@@ -47,8 +47,8 @@ class PubSub_GCP(WorkSpawner.PubSub):
 		subscription_list = self.publisher.list_topic_subscriptions(topic)
 
 		try:  # get the first one...should only be one
-			subscription = subscription_list[0]
-			subscription_name = subscription.name
+			for subscription in subscription_list:
+				subscription_name = subscription.name
 			logging.debug("Subscription_name: " + subscription_name)
 		except KeyError:
 			logging.error('Could not find a subscription for topic: ' + topic)
