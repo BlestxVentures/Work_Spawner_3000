@@ -15,7 +15,7 @@ class Topics:
 		self.rows = []  # contains all of the rows from the config file
 		self.topics = []  # save a list of the topics
 
-	def load_topic_file(self, filename="GCPTopics.csv"):
+	def load_topic_file(self, filename="PubSubTopics.csv"):
 		if self._load_topic_file_rows(filename):
 			return self.get_topic_list()
 		else:
@@ -39,9 +39,10 @@ class Topics:
 		#	high score: less than this score to put into the topic
 
 		self.topics = []  # reload all of the topics
+		topic_root = ''
 		# loop through all of the rows of the file and use column headings to pull out values
 		for row in self.rows:
-			topic_root = row.get(self.topic_root_tag)
+			# topic_root = row.get(self.topic_root_tag)  get without the root for now
 			topic_id = row.get(self.topic_uid_tag)
 			topic = topic_root + topic_id
 			self.topics.append(topic)
@@ -58,7 +59,7 @@ class Topics:
 							# e.g., "projects/work-spawner-3000/topics/"
 
 		for row in self.rows:
-			topic_root = row.get(self.topic_root_tag)
+			# topic_root = row.get(self.topic_root_tag) get without the root for now
 			topic_id = row.get(self.topic_uid_tag)
 			bin_low = float(row.get(self.low_score_tag))
 			bin_high = float(row.get(self.high_score_tag))

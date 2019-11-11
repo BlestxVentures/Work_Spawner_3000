@@ -20,12 +20,13 @@ import MyWork
 #  This class encapsulates the information that is passed around on the message queue
 class Message:
 
-	def __init__(self, attributes, body):
-		"""	attributes: dict of things passed along with the message in the queue
-			body: binary blob of data
+	def __init__(self, body, attributes):
 		"""
-		self.attributes = attributes
+		:param attributes: dict of things passed along with the message in the queue
+		:param body: binary blob of data
+		"""
 		self.body = body
+		self.attributes = attributes
 		self.acknowledged = False
 
 	def __repr__(self):
@@ -48,10 +49,10 @@ class PubSub:  # base class that describes the implementation independent interf
 	def __init__(self):
 		self.queue = {}  # a dictionary of all of the topics the PubSub will communicate with
 
-	def publish(self, topic, attributes, body):
+	def publish(self, topic, body, attributes):
 		"""	topic: the topic to which message will be published
-			attributes: dictionary list of attributes to send along with the body
 			body: assumed binary data of message to pass to/from work
+			attributes: dictionary list of attributes to send along with the body
 		"""
 		try:
 			self.queue[topic]  # if a queue hasn't been created yet, create one
@@ -102,7 +103,7 @@ class Spawner:
 	def get_work_cmd(self, message):
 		return MyWork.get_work_cmd(message)
 
-	def spawn_docker(self, docker_id, attributes, body):
+	def spawn_docker(self, docker_id, body, attributes):
 		cmd = ['docker', 'run', '--rm', docker_id]
 		logging.debug('Docker cmd: ' + str(cmd))
 		self.subprocess = Popen(cmd)
@@ -205,7 +206,7 @@ def work_spawner(test=False):
 		for topic in topics:
 			attributes = {1: "attr1", 2: "attr2"}
 			body = "sample body text"
-			queue.publish(topic, attributes, body)
+			queue.publish(topic, body, attributes)
 
 	while True:
 
@@ -241,7 +242,7 @@ def work_spawner(test=False):
 				del message.attributes['docker_id']
 
 				# spawn as a sub process
-				spawner.spawn_docker(docker_id, message.attributes, message.body)
+				spawner.spawn_docker(docker_id, message.body, message.attributes)
 			else:
 				# spawn as a shell process
 				spawner.spawn_shell(message)

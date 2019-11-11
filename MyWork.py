@@ -30,7 +30,6 @@ class PubSub_GCP(WorkSpawner.PubSub):
 		self.ack_ids = []  # used to keep the ack_id's for successfully processed messages
 		self.subscriptions = {}  # every topic requires a subscription object to interact with it.
 		self.project_id = WorkSpawnerConfig.project_id
-
 		self.subscriber = pubsub_v1.SubscriberClient()
 
 	def get_subscription(self, topic):
@@ -43,41 +42,31 @@ class PubSub_GCP(WorkSpawner.PubSub):
 		except KeyError:
 			pass  # continue to the rest of the function
 
-#		subscription_path = self.subscriber.subscription_path(self.project_id, subscription_name)
+		# assume there is a subscription with the same name as the topic
 		subscription_path = self.subscriber.subscription_path(self.project_id, topic)
-
 		logging.debug("subscription_path: " + subscription_path)
 
 		self.subscriptions[topic] = subscription_path
 
 		return subscription_path
 
-	'''
-			# get the current subscriptions for the topic
-			publisher = pubsub_v1.PublisherClient()
-			topic_path = publisher.topic_path(WorkSpawnerConfig.project_id, topic)
-			subscription_list = self.publisher.list_topic_subscriptions(topic_path)
-
-			try:  # get the first one...should only be one
-				for subscription in subscription_list:
-					subscription_name = subscription.name
-				logging.debug("Subscription_name: " + subscription_name)
-			except KeyError:
-				logging.error('Could not find a subscription for topic: ' + topic)
-				exit(-1)
-	'''
-
-	def publish(self, topic, attributes, body):
+	def publish(self, topic, body, attributes):
 		""" Publish a message body and attributes to a topic in a PubSub environment
-		:param topic: 	fully qualified topic string specific to the cloud platform.
+		:param topic: 	topic string specific to the cloud platform.  the path will be added to it
 						For GC: projects/project_id/topics/topic_name
-		:param attributes: dictionary of custom attributes to pass along with message
 		:param body: binary blob of data
+		:param attributes: dictionary of custom attributes to pass along with message
 		:return: True if successful, False otherwise
 		"""
-		# When you publish a message, the client returns a future.
-		#https: // googleapis.dev / python / pubsub / latest / publisher / api / futures.html
-		future = self.publisher.publish(topic, data=body.encode('utf-8'), attributes=attributes)  # data must be a bytestring.
+		# create the full unique path of the topic based on the current project
+		topic_path = self.publisher.topic_path(self.project_id, topic)
+
+		# When a message is published a message, the client returns a "future".
+		# this is to handle async responses for errors.
+		# https://googleapis.dev/python/pubsub/latest/publisher/api/futures.html
+
+		# data must be a byte string.
+		future = self.publisher.publish(topic_path, data=body.encode('utf-8'), attributes=attributes)
 		logging.debug(future.result())
 
 	def pull(self, topic, max_message_count=1):
@@ -90,7 +79,7 @@ class PubSub_GCP(WorkSpawner.PubSub):
 		for received_message in response.received_messages:
 			logging.debug("Received: {}".format(received_message.message.data))
 			self.ack_ids.append(received_message.ack_id)
-			messages.append(WorkSpawner.Message(received_message.message.attributes,received_message.message.data))
+			messages.append(WorkSpawner.Message(received_message.message.data, received_message.message.attributes))
 
 		# Acknowledges the received messages so they will not be sent again.
 		# TODO: move this to after the message has been processed successfully
@@ -144,9 +133,8 @@ def get_work_cmd(message):  # default stub
 
 def prioritize(message):  # where the prioritization happens based on the message
 	logging.debug(message)
-	random.randint()
 	rand_int = random.randint(1, 10)
-	logging.debug('generating a randomd score of: ' + str(rand_int))
+	logging.debug('generating a random score of: ' + str(rand_int))
 	return rand_int
 
 if __name__ == "__main__":
