@@ -29,7 +29,7 @@ class Message:
 		:param attributes: dict of things passed along with the message in the queue
 		:param body: binary blob of data
 		"""
-		self.body = body
+		self.body = str(body)
 		self.attributes = attributes
 		self.acknowledged = False
 
