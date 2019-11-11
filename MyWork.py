@@ -60,7 +60,7 @@ class PubSub_GCP(WorkSpawner.PubSub):
 		:return: True if successful, False otherwise
 		"""
 
-		logging.debug('publishing body: ' + body + ' attributes: ' + attributes)
+		logging.debug('publishing body: ' + str(body) + ' attributes: ' + attributes)
 
 		# create the full unique path of the topic based on the current project
 		topic_path = self.publisher.topic_path(self.project_id, topic)
