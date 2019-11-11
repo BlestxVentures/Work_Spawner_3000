@@ -22,7 +22,9 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-class PubSub_GCP(WorkSpawner.PubSub):
+#class PubSub_GCP(WorkSpawner.PubSub):
+class PubSub_GCP:
+
 	def __init__(self):
 
 		# for publishing
