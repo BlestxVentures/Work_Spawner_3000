@@ -294,7 +294,7 @@ def work_prioritizer(testing):
 			score = prioritizer.prioritize(message)
 			topic_to_publish_on = store.get_topic(score)
 			if topic_to_publish_on:
-				queue.publish(topic_to_publish_on, message.attributes, message.body)
+				queue.publish(topic_to_publish_on, message.body, message.attributes)
 			else:
 				logging.error('could not find a topic to send work to for score: ' + str(score))
 
