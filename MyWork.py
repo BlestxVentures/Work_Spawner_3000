@@ -59,8 +59,12 @@ class PubSub_GCP(WorkSpawner.PubSub):
 		:param attributes: dictionary of custom attributes to pass along with message
 		:return: True if successful, False otherwise
 		"""
+
+		logging.debug('publishing body: ' + body + ' attributes: ' + attributes)
+
 		# create the full unique path of the topic based on the current project
 		topic_path = self.publisher.topic_path(self.project_id, topic)
+		logging.debug('publishing on topic: ' + topic_path)
 
 		# When a message is published a message, the client returns a "future".
 		# this is to handle async responses for errors.
