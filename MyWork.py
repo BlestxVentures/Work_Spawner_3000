@@ -6,6 +6,7 @@ import random
 
 
 # cloud imports
+from google.api_core.exceptions import DeadlineExceeded
 from google.cloud import pubsub_v1
 
 # WorkSpawner specific
@@ -75,7 +76,11 @@ class PubSub_GCP(WorkSpawner.PubSub):
 		messages = []
 		# The subscriber pulls a specific number of messages.
 		subscription_path = self.get_subscription(topic)
-		response = self.subscriber.pull(subscription_path, max_messages=max_message_count)
+
+		try:
+			response = self.subscriber.pull(subscription_path, max_messages=max_message_count)
+		except DeadlineExceeded:
+			return messages
 
 		for received_message in response.received_messages:
 			logging.debug("Received: {}".format(received_message.message.data))
