@@ -159,9 +159,6 @@ class Prioritizer:
 	def __init_(self):
 		pass
 
-	def terminate(self, secs):
-		logging.info('Terminating in '+ str(secs), + ' seconds')
-
 	def prioritize(self, message):
 		return MyWork.prioritize(message)
 
@@ -188,8 +185,7 @@ class CloudStore:  # defines implementation independent interface
 
 def work_spawner(test=False):
 
-	def signal_handler(self, sig, frame):
-		spawner.terminate(10)
+	def signal_handler(sig, frame):
 		sys.exit(0)
 
 	# handle CTRL-C to stop subprocess
@@ -260,8 +256,7 @@ def work_spawner(test=False):
 
 
 def work_prioritizer(testing):
-	def signal_handler(self, sig, frame):
-		prioritizer.terminate(10)
+	def signal_handler(sig, frame):
 		sys.exit(0)
 
 	# handle CTRL-C to stop subprocess
