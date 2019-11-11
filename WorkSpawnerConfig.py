@@ -5,7 +5,7 @@ logging.basicConfig(format='%(process)d: %(asctime)s: %(levelname)s: %(funcName)
 
 #  the location of the topic configurator file
 #  bucket_name/topicfile
-#TOPIC_FILE = "ws-proto-bucket-1/topics.csv"
+#TOPIC_FILE = "ws-proto-bucket-1/PubSubtopics.csv"
 TOPIC_FILE = 'PubSubTopics.csv'
 
 # name of topic to look for work to prioritize

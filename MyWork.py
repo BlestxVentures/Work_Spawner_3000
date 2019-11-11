@@ -11,6 +11,8 @@ from google.cloud import pubsub_v1
 
 # WorkSpawner specific
 import WorkSpawnerConfig
+import WorkSpawner
+
 
 # Specific to MyWork
 import MyWorkConfig
@@ -19,9 +21,8 @@ import MyWorkConfig
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
-#class PubSub_GCP(WorkSpawner.PubSub):
 
-class PubSub_GCP:
+class PubSub_GCP(WorkSpawner.PubSub):
 	def __init__(self):
 
 		# for publishing
@@ -93,7 +94,7 @@ class PubSub_GCP:
 			self.ack_ids.append(received_message.ack_id)
 			payload = received_message.message.data.decode('utf-8')
 			attributes = dict(received_message.message.attributes)
-			messages.append(WorkSpawner.Message(payload,attributes))
+			messages.append(WorkSpawner.Message(payload, attributes))
 
 		# Acknowledges the received messages so they will not be sent again.
 		# TODO: move this to after the message has been processed successfully
