@@ -91,7 +91,9 @@ class PubSub_GCP(WorkSpawner.PubSub):
 		for received_message in response.received_messages:
 			logging.debug("Received: {}".format(received_message.message.data))
 			self.ack_ids.append(received_message.ack_id)
-			messages.append(WorkSpawner.Message(received_message.message.data.decode('utf-8'), received_message.message.attributes))
+			payload = received_message.message.data.decode('utf-8')
+			attributes = dict(received_message.message.attributes)
+			messages.append(WorkSpawner.Message(payload,attributes))
 
 		# Acknowledges the received messages so they will not be sent again.
 		# TODO: move this to after the message has been processed successfully
