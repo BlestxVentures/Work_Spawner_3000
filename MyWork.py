@@ -60,7 +60,7 @@ class PubSub_GCP(WorkSpawner.PubSub):
 		:return: True if successful, False otherwise
 		"""
 
-		logging.debug('publishing body: ' + str(body) + ' attributes: ' + attributes)
+		#logging.debug('publishing body: ' + str(body) + ' attributes: ' + attributes)
 
 		# create the full unique path of the topic based on the current project
 		topic_path = self.publisher.topic_path(self.project_id, topic)
@@ -71,7 +71,9 @@ class PubSub_GCP(WorkSpawner.PubSub):
 		# https://googleapis.dev/python/pubsub/latest/publisher/api/futures.html
 
 		# data must be a byte string.
-		payload = bytes(body)
+		payload = body.encode('utf-8')
+		if not attributes:
+			logging.debug('attributes are empty')
 		future = self.publisher.publish(topic_path, data=payload, attributes=attributes)
 		logging.debug(future.result())
 
@@ -89,7 +91,7 @@ class PubSub_GCP(WorkSpawner.PubSub):
 		for received_message in response.received_messages:
 			logging.debug("Received: {}".format(received_message.message.data))
 			self.ack_ids.append(received_message.ack_id)
-			messages.append(WorkSpawner.Message(received_message.message.data, received_message.message.attributes))
+			messages.append(WorkSpawner.Message(received_message.message.data.decode('utf-8'), received_message.message.attributes))
 
 		# Acknowledges the received messages so they will not be sent again.
 		# TODO: move this to after the message has been processed successfully
@@ -97,6 +99,9 @@ class PubSub_GCP(WorkSpawner.PubSub):
 
 		logging.info('Received and acknowledged {} messages. Done.'.format(
 			len(response.received_messages)))
+
+		# TODO: handle non-existent queue
+
 
 		return messages
 
