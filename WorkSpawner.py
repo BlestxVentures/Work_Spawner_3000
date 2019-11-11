@@ -186,6 +186,7 @@ class CloudStore:  # defines implementation independent interface
 def work_spawner(test=False):
 
 	def signal_handler(sig, frame):
+		logging.info('work_spawner is being terminated')
 		sys.exit(0)
 
 	# handle CTRL-C to stop subprocess
@@ -257,6 +258,7 @@ def work_spawner(test=False):
 
 def work_prioritizer(testing):
 	def signal_handler(sig, frame):
+		logging.info('work_prioritizer is being terminated')
 		sys.exit(0)
 
 	# handle CTRL-C to stop subprocess
