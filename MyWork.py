@@ -66,7 +66,8 @@ class PubSub_GCP(WorkSpawner.PubSub):
 		# https://googleapis.dev/python/pubsub/latest/publisher/api/futures.html
 
 		# data must be a byte string.
-		future = self.publisher.publish(topic_path, data=body.encode('utf-8'), attributes=attributes)
+		payload = bytes(body)
+		future = self.publisher.publish(topic_path, data=payload, attributes=attributes)
 		logging.debug(future.result())
 
 	def pull(self, topic, max_message_count=1):

@@ -16,6 +16,10 @@ import TopicReader
 #  This is the module that contains all of the domain specific work.
 import MyWork
 
+# logging format is set in the WorkSpawnerConfig...this changes the level in this file.
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
 
 #  This class encapsulates the information that is passed around on the message queue
 class Message:
@@ -149,6 +153,7 @@ class Spawner:
 		return exitcode
 
 
+# read used to assign work to different priority queues
 class Prioritizer:
 
 	def __init_(self):
@@ -161,10 +166,7 @@ class Prioritizer:
 		return MyWork.prioritize(message)
 
 
-
-
 #  Class to load the configuration for the pub/sub topics
-
 class CloudStore:  # defines implementation independent interface
 
 	def __init__(self):
