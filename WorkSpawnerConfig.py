@@ -14,7 +14,7 @@ priority_topic_name = "work-to-prioritize"
 # how long to wait for work before timing out
 WAIT_TIMEOUT = 60
 
-# should run in test mode and not use actual cloud functions
+# should run in test mode and not use actual cloud functions, command line args can override this
 TEST_MODE = False
 SIMULATION_MODE = False
 

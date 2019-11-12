@@ -92,6 +92,22 @@ class PubSub:  # base class that describes the implementation independent interf
 
 		return messages[:max_message_count]  # return a subset of those messages
 
+	def ack(self, ack_ids):
+		"""
+			acknowledges successfully processed messages
+
+			:param ack_ids: list of ids that need to be acknowledged
+
+		ack_ids = []
+		for received_message in response.received_messages:
+			print("Received: {}".format(received_message.message.data))
+			ack_ids.append(received_message.ack_id)
+
+		# Acknowledges the received messages so they will not be sent again.
+		self.subscriber.acknowledge(subscription_path, ack_ids)
+		"""
+		pass
+
 
 class Spawner:
 
@@ -301,21 +317,23 @@ def work_prioritizer(testing):
 if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--test", help="run and generate dummy data to work on", action="store_true")
 	parser.add_argument("--spawner", help="run the work spawner daemon", action="store_true")
 	parser.add_argument("--prioritizer", help="run the work prioritizer daemon", action="store_true")
+	parser.add_argument("--test", help="generate dummy data test pub sub", action="store_true")
+	parser.add_argument("--simulate", help="simulate pubsub infrastructure in memory to test spawned work", action="store_true")
 
 	# get the args
 	args = parser.parse_args()
 
 	testing = args.test
-	if testing:
+	if testing:  # testing mode will generate and process fake data to test pub sub infrastructure
 		logging.debug('In test mode')
+		WorkSpawnerConfig.TEST_MODE = True  # set the global state
 
 	if args.spawner:
-		work_spawner(testing)  # if the test flag is passed put in test mode
+		work_spawner(WorkSpawnerConfig.TEST_MODE)
 	elif args.prioritizer:
-		work_prioritizer(testing)
+		work_prioritizer(WorkSpawnerConfig.TEST_MODE)
 	else:
 		logging.error("Need to specify --spawner or --prioritizer")
 
