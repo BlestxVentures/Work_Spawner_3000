@@ -7,11 +7,6 @@ import datetime
 # compute = googleapiclient.discovery.build('compute', 'v1')
 # https://cloud.google.com/compute/docs/reference/rest/v1/projects/get
 
-project_id = "work-spawner-3000"
-
-topic_name = "priority-1"  # default pub/sub topic name
-subscription_name = topic_name  # default subscription name matches topic
-
 # name of the bucket where work files will be stored long term
 bucket_name = 'ws-proto-bucket-1'
 

@@ -1,18 +1,14 @@
 # standard imports
 import logging
-import time
 import argparse
+
+# for user specific work
+import time
 import random
-
-
-# cloud imports
-from google.api_core.exceptions import DeadlineExceeded
-from google.cloud import pubsub_v1
 
 # WorkSpawner specific
 import WorkSpawnerConfig
-import WorkSpawner
-
+from PubSub import Message
 
 # Specific to MyWork
 import MyWorkConfig
@@ -22,12 +18,9 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-#class PubSub_GCP(WorkSpawner.PubSub):
-
-
 # stateless re-entrant functions
 def pre_process(message):  # things that need to be done before processing work
-	logging.debug(message)
+	logging.debug('pre_processing: ' + message)
 	# payload definition
 	# src directory for the config and starter genomes
 	# copy all files from src directory to ./config/*
@@ -36,7 +29,7 @@ def pre_process(message):  # things that need to be done before processing work
 
 
 def post_process(message):  # things that need to be done after the work is complete
-	logging.debug(message)
+	logging.debug('post_processing: ' + message)
 
 	# unpack the payload and do any work that needs to be done
 	# get machine name
@@ -47,19 +40,23 @@ def post_process(message):  # things that need to be done after the work is comp
 
 
 def get_work_cmd(message):  # default stub
-	logging.debug(message)
+	logging.debug('work command for: ', message)
 
 	# unpack the payload and do any work that needs to be done
 	cmd_to_run = ['python', 'MyWork.py', '--test']  # needs to be something Popen can run.
+	logging.debug('cmd: ' + cmd_to_run )
+
 	return cmd_to_run
 
 
 def prioritize(message):  # where the prioritization happens based on the message
-	logging.debug(message)
+	logging.debug('prioritizing: ' + message)
 	rand_int = random.randint(1, 10)
 	logging.debug('generating a random score of: ' + str(rand_int))
 	return rand_int
 
+
+import ConceptTester
 if __name__ == "__main__":
 
 	logging.info('Started the work')
@@ -70,7 +67,11 @@ if __name__ == "__main__":
 
 	if args.test:
 		logging.debug("Using Test Work")
-		time.sleep(5)  # work for a minute
+		time.sleep(1)  # work for a minute
+		print('Here is what it is before: ', WorkSpawnerConfig.TEST_MODE)
+		r = ConceptTester.test_that_concept_thangy(WorkSpawnerConfig.TEST_MODE)
+		print('Here is what what passed back', r)
+		print('Here is what it is now: ', WorkSpawnerConfig.TEST_MODE)
 		exit(0)  # exit successfully
 
 	logging.debug("Using normal Work")
