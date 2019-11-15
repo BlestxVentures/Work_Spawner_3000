@@ -2,23 +2,17 @@
 import logging
 import datetime
 
-# cloud imports
-
-from google.api_core.exceptions import DeadlineExceeded
-from google.api_core.exceptions import NotFound
-
-from google.cloud import pubsub_v1
-
 # WorkSpawner specific
 import WorkSpawnerConfig
-import WorkSpawner
 
 # logging format is set in the WorkSpawnerConfig...this changes the level in this file.
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-#  This class encapsulates the information that is passed around on the message queue
+#  This is effectively an abstract base class that is platform independent
+#  and encapsulates the information and interface that is passed around on the message queue
+#  the dummy implementation is only for testing
 class Message:
 
 	def __init__(self, body, attributes):
@@ -26,14 +20,9 @@ class Message:
 		:param attributes: dict of things passed along with the message in the queue
 		:param body: binary blob of data
 		"""
-		self.body = str(body)
+		self.body = body
 		self.attributes = attributes
 		self.acknowledged = False
-
-	def __init__(self, platform_specific_message):
-		self.platform_message = platform_specific_message
-		self.body = platform_specific_message.data.decode('utf-8')
-		self.attributes = dict(platform_specific_message.message.attributes)
 
 	# this is required method because used in error handling and reporting
 	def __repr__(self):
@@ -54,34 +43,41 @@ class Message:
 		key = 'error_' + str(datetime.time())
 		self.attributes[key] = error_str
 
+	# over ride this method for platform specific work
 	def ack(self):
-		#TODO: will need the topic so can make sure it is popped off.
 		self.acknowledged = True  # whether message has been acknowledge to pub/sub queue
 
 
-#  This class encapsulates the PubSub functionality needed
+#  This is effectively an abstract base class that is platform independent
+#  it encapsulates platform independent PubSub information and interface needed
+#  to participate in the WorkSpawner and Prioritizer
 class PubSub:  # base class that describes the implementation independent interface
 
+	# override this method with platform specific init
 	def __init__(self):
 		self.queue = {}  # a dictionary of all of the topics the PubSub will communicate with
 
-	def publish(self, topic, body, attributes):
-		"""	topic: the topic to which message will be published
-			body: assumed binary data of message to pass to/from work
-			attributes: dictionary list of attributes to send along with the body
+	# override this method with platform specific methods
+	def publish(self, topic, message):
+		"""
+		publish message on topic
+		:param topic: short topic name to publish message
+		:param message: message to publish
+		:return: success = True, False otherwise
 		"""
 		try:
 			self.queue[topic]  # if a queue hasn't been created yet, create one
 		except KeyError:
 			self.queue[topic] = []
 
-		message = Message(attributes, body)
 		self.queue[topic].append(message)
 
 		# for debugging only
-		debug_msg = 'Queuing-> ' + str(message) + ' to topic: ' + str(topic)
+		debug_msg = 'Queuing-> ' + message + ' to topic: ' + str(topic)
 		logging.debug(debug_msg)
+		return True
 
+	# override this method with platform specific methods
 	def pull(self, topic, max_message_count=1):
 		"""	topic: the topic to pull a message from
 			max_message_count: how many messages to process in a given call
@@ -104,33 +100,40 @@ class PubSub:  # base class that describes the implementation independent interf
 
 		return messages[:max_message_count]  # return a subset of those messages
 
+	# override this method with platform specific methods
 	def log_failed_work(self, message):
 		logging.error('Work failed for message: ' + message)
 
-
+	# override this method with platform specific methods
 	def ack(self, message):
 		"""
 			acknowledges successfully processed messages
-
-			:param ack_ids: list of ids that need to be acknowledged
-
-		# response[].received_messages
-		# received_message.ackID
-		# received_message.message
-		# message.data: string
-		# message.attributes { string: string }
-		# message.messageID: string
-		# message.publishTime: string
-		ack_ids = []
-		for received_message in response.received_messages:
-			print("Received: {}".format(received_message.message.data))
-			ack_ids.append(received_message.ack_id)
-
-		# Acknowledges the received messages so they will not be sent again.
-		self.subscriber.acknowledge(subscription_path, ack_ids)
+			:param message: message to acknowledge
 		"""
-		pass
+		message.ack()
 
+
+# ----  Google Cloud Platform implementation below here -----
+# cloud specific imports
+from google.api_core.exceptions import DeadlineExceeded
+from google.api_core.exceptions import NotFound
+from google.cloud import pubsub_v1
+
+
+class Message_GCP(Message):
+	"""
+	GCP specific version of Message
+	"""
+	def __init__(self, body='', attributes=None):
+		self.body = body
+		self.attributes = attributes
+		self.received_message = None  # used to store the full message received if any
+
+	def create_from_received_message(self, received_message):
+		self.received_message = received_message  # this has other data stored with it.
+		self.body = self.received_message.message.data.decode('utf-8')
+		self.attributes = dict(self.received_message.message.attributes)
+		logging.debug('created a message: ' + self)  # base class repr should be able to print this
 
 class PubSub_GCP(PubSub):
 
@@ -140,12 +143,19 @@ class PubSub_GCP(PubSub):
 		self.publisher = pubsub_v1.PublisherClient()
 
 		# for subscribing
+		self.subscriber = pubsub_v1.SubscriberClient()
 		self.ack_paths = {}  # used to keep the ack_id's for successfully processed messages
 		self.subscriptions = {}  # every topic requires a subscription object to interact with it.
-		self.project_id = WorkSpawnerConfig.project_id
-		self.subscriber = pubsub_v1.SubscriberClient()
 
-	def get_subscription(self, topic):
+		# store project id from the configuration file
+		self.project_id = WorkSpawnerConfig.project_id
+
+	def _get_subscription(self, topic):
+		"""
+		private method only used by GCP
+		:param topic: short name of topic to lookup the subscription for.
+		:return: subscription_path as a string
+		"""
 
 		logging.debug("Looking up subscriptions for topic: " + topic)
 		# see if have already looked up the subscription
@@ -185,29 +195,43 @@ class PubSub_GCP(PubSub):
 		payload = message.body.encode('utf-8')
 		if not message.attributes:
 			logging.debug('attributes are empty')
+
 		future = self.publisher.publish(topic_path, data=payload, attributes=message.attributes)
 		logging.debug(future.result())
 
 	def pull(self, topic, max_message_count=1):
+		"""
+		poll to see if there is are any messages for the given topic
+		:param topic: short name for the topic
+		:param max_message_count: number of messages to pull if available, will pull up to max
+		:return: list of messages pulled, empty if non available
+		"""
 
 		messages = []
-		# The subscriber pulls a specific number of messages.
-		subscription_path = self.get_subscription(topic)
-		# TODO: handle non-existent queue
 
+		# use the topic to find the appropriate subscription
+		subscription_path = self._get_subscription(topic)
+
+		# The subscriber attempts to pull all of the messages up to the max.
 		try:
-			response = self.subscriber.pull(subscription_path, max_messages=max_message_count)
-		except DeadlineExceeded:  # deadline is set at the subscription level
+			response = self.subscriber.pull(subscription_path, return_immediately=True, max_messages=max_message_count)
+		except DeadlineExceeded:  # deadline is set at the subscription level.  if no work available by deadline, return
 			return messages  # should be empty
 		except NotFound:
 			logging.error('subscription path does not exist: ' + subscription_path)
 			exit(-1)
 
+		# response: definition google.cloud.pubsub_v1.types.PullResponse
+		# received_messages will be empty if none are available
+		# received_message: definition google.cloud.pubsub_v1.types.ReceivedMessage
+
 		for received_message in response.received_messages:
 			ack_id = received_message.ack_id
 			self.ack_paths[received_message.message.messageID] = {'path': subscription_path, 'ack_id': ack_id }
 			logging.debug("Received: " + received_message)
-			messages.append(Message(received_message))
+			message = Message_GCP()
+			message.create_from_received_message(received_message)
+			messages.append(message)
 
 		return messages
 
@@ -220,15 +244,21 @@ class PubSub_GCP(PubSub):
 		# message.messageID: string
 		# message.publishTime: string
 
-		subscription_path, ack_id = self.ack_paths[message.messageID]
 		# Acknowledges the received messages so they will not be sent again.
-		self.subscriber.acknowledge(subscription_path, ack_id)
-		logging.debug('Acknowledged: ' + message)
+
+		try:  # if came from a received message, should have ack() method on it.
+			message.received_message.ack()  # Python PubsubMessage has a method to ack itself
+			logging.debug('Acknowledged using built in ack method: ' + message)
+		except:  # try try again
+			subscription_path, ack_id = self.ack_paths[message.messageID]
+			self.subscriber.acknowledge(subscription_path, ack_id)
+			logging.debug('Acknowledged using explicit acknowledge: ' + message)
 
 	def log_failed_work(self, message):
 		self.publish(WorkSpawnerConfig.failed_work_topic_name, message)
 
 
+# ---- Used to abstract the instantiation of the platform specific class ----
 class PubSubFactory:
 
 	@staticmethod
