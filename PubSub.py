@@ -278,7 +278,7 @@ class PubSub_GCP(PubSub):
 		r_ack_id = message.received_message.ack_id
 		subs = self.ack_paths[message_id]
 		subscription_path = subs['path']
-		ack_id = subs['ack_id']
+		ack_ids = [subs['ack_id']]
 
 		logging.debug('subscription path to ack: ' + str(subscription_path))
 		logging.debug('received message ack_id: ' + str(r_ack_id))
