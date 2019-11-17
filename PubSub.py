@@ -140,6 +140,7 @@ class Message_GCP(Message):
 		ret_attribs = {}
 
 		for key in self.attributes:
+			logging.debug('Type of attribute: ' + str(key) + 'is: ' + type(self.attributes[key]).__name__)
 			ret_attribs[key] = str(self.attributes[key])
 
 		return ret_attribs
@@ -206,13 +207,11 @@ class PubSub_GCP(PubSub):
 		if not message.attributes:
 			logging.debug('attributes are empty')
 
-		try:
+		if isinstance(message, Message_GCP):
 			# if a Message_GCP, then use function to convert it.  Otherwise assume attribs are strings
 			logging.debug('Converting attributes to string: ', str(message))
 			attribs = message._convert_attributes()
-		except:
-			logging.debug('Force converting attributes to string: ', str(message))
-			attribs = message._convert_attributes()
+
 
 		future = self.publisher.publish(topic_path, data=payload, attributes=attribs)
 		logging.debug(future.result())
