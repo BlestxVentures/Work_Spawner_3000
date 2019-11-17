@@ -209,7 +209,7 @@ class PubSub_GCP(PubSub):
 
 		if isinstance(message, Message_GCP):
 			# if a Message_GCP, then use function to convert it.  Otherwise assume attribs are strings
-			logging.debug('Converting attributes to string: ', str(message))
+			logging.debug('Converting attributes to string: ' + str(message))
 			attribs = message._convert_attributes()
 
 
@@ -252,7 +252,6 @@ class PubSub_GCP(PubSub):
 			logging.debug("Received message: " + str(received_message))
 			message = Message_GCP()
 			message.create_from_received_message(received_message)
-			logging.debug("message to work with: " + str(message))
 			messages.append(message)
 
 		return messages
@@ -269,10 +268,16 @@ class PubSub_GCP(PubSub):
 		# Acknowledges the received messages so they will not be sent again.
 
 		try:  # if came from a received message, should have ack() method on it.
-			message.received_message.message.ack()  # Python PubsubMessage has a method to ack itself
+			message.received_message.ack()  # Python PubsubMessage has a method to ack itself
 			logging.debug('Acknowledged using built in ack method: ' + str(message))
 		except Exception:  # try try again
-			subscription_path, ack_id = self.ack_paths[message.received_message.message_id]
+			message_id = message.received_message.message.message_id
+			r_ack_id = message.received_message.ack_id
+
+			subscription_path, ack_id = self.ack_paths[message_id]
+			logging.debug('subscription path to ack: ' + str(subscription_path))
+			logging.debug('received message ack_id: ' + str(r_ack_id))
+			logging.debug('message_id: ' + str(message_id) + ' ack_id: ' + str(ack_id))
 			self.subscriber.acknowledge(subscription_path, ack_id)
 			logging.debug('Acknowledged using explicit acknowledge: ' + str(message))
 
