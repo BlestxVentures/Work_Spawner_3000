@@ -146,7 +146,7 @@ def work_spawner():
 		# If we got any messages, spawn a subprocess to handle each message in order received
 		# then start over with the highest priority topic again
 		for message in messages:  # loop through all of the messages and process each one
-			logging.debug('working with message: ' + str(message) + ' pulled from: ' + str(topic))
+			logging.info('working with message: ' + str(message) + ' pulled from: ' + str(topic))
 
 			# perform any work that needs to be done before spawned. e.g., copying files etc.
 			if not spawner.pre_process(message):
@@ -224,11 +224,12 @@ def work_prioritizer():
 			score = prioritizer.prioritize(message)
 			topic_to_publish_on = tr.get_topic(score)
 			if topic_to_publish_on:
+				logging.info('publishing: ' + str(message) + ' on topic: ' + str(topic_to_publish_on))
 				queue.publish(topic_to_publish_on, message)
 			else:
 				logging.error('could not find a topic to send work to for score: ' + str(score))
 				queue.log_failed_work(message)
-				
+
 			queue.ack(message)  # make sure it doesn't get processed again
 
 
