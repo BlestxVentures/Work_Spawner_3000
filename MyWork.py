@@ -20,7 +20,7 @@ logger.setLevel(logging.DEBUG)
 
 # stateless re-entrant functions
 def pre_process(message):  # things that need to be done before processing work
-	logging.debug('pre_processing: ' + message)
+	logging.debug('pre_processing: ' + str(message))
 	# payload definition
 	# src directory for the config and starter genomes
 	# copy all files from src directory to ./config/*
@@ -29,7 +29,7 @@ def pre_process(message):  # things that need to be done before processing work
 
 
 def post_process(message):  # things that need to be done after the work is complete
-	logging.debug('post_processing: ' + message)
+	logging.debug('post_processing: ' + str(message))
 
 	# unpack the payload and do any work that needs to be done
 	# get machine name
@@ -40,7 +40,7 @@ def post_process(message):  # things that need to be done after the work is comp
 
 
 def get_work_cmd(message):  # default stub
-	logging.debug('work command for: ', message)
+	logging.debug('work command for: ', str(message))
 
 	# unpack the payload and do any work that needs to be done
 	cmd_to_run = ['python', 'MyWork.py', '--test']  # needs to be something Popen can run.
@@ -50,7 +50,7 @@ def get_work_cmd(message):  # default stub
 
 
 def prioritize(message):  # where the prioritization happens based on the message
-	logging.debug('prioritizing: ' + message)
+	logging.debug('prioritizing: ' + str(message))
 	rand_int = random.randint(1, 10)
 	logging.debug('generating a random score of: ' + str(rand_int))
 	return rand_int
