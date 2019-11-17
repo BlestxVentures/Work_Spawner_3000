@@ -7,7 +7,7 @@ import WorkSpawnerConfig
 
 # logging format is set in the WorkSpawnerConfig...this changes the level in this file.
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 #  This is effectively an abstract base class that is platform independent

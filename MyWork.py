@@ -1,6 +1,7 @@
 # standard imports
 import logging
 import argparse
+import subprocess
 
 # for user specific work
 import time
@@ -8,6 +9,7 @@ import random
 
 # WorkSpawner specific
 import WorkSpawnerConfig
+import PubSub
 from PubSub import Message
 
 # Specific to MyWork
@@ -24,8 +26,11 @@ def pre_process(message):  # things that need to be done before processing work
 	# payload definition
 	# src directory for the config and starter genomes
 	# copy all files from src directory to ./config/*
+	cmd = 'gsutil cp gs://ws-proto-bucket-1/Bug-World/* .'
+	logging.info('executing the following command: ' + cmd)
+	rv = subprocess.call(cmd)
 
-	return True  # if everything was successful
+	return rv  # if everything was successful
 
 
 def post_process(message):  # things that need to be done after the work is complete
@@ -36,6 +41,12 @@ def post_process(message):  # things that need to be done after the work is comp
 	# construct destination directory root
 	# use gsutils to mv all directories from ./logs/*
 	#https://cloud.google.com/storage/docs/gsutil/commands/cp
+	base_path = "gs://ws-proto-bucket-1/Bug-World/"
+	curr_time = str(time.time())
+	sim_run_path = base_path + curr_time
+	cmd = 'gsutil mv logs/*' + sim_run_path
+	logging.info('executing the following command: ' + cmd)
+	rv = subprocess.call(cmd)
 	return True  # if everything successful
 
 
@@ -43,7 +54,8 @@ def get_work_cmd(message):  # default stub
 	logging.debug('work command for: ' + str(message))
 
 	# unpack the payload and do any work that needs to be done
-	cmd_to_run = ['python', 'MyWork.py', '--test']  # needs to be something Popen can run.
+	#cmd_to_run = ['python', 'MyWork.py', '--test']  # needs to be something Popen can run.
+	cmd_to_run = ['python', 'MyWork.py']  # needs to be something Popen can run.
 	logging.debug('cmd: ' + str(cmd_to_run ))
 
 	return cmd_to_run
@@ -79,4 +91,16 @@ if __name__ == "__main__":
 		exit(0)  # exit successfully
 
 	logging.debug("Using normal Work")
+
+	log_file = 'logs/file' + str(time.time())
+	with open(log_file, "w+") as f:
+		f.write("time 1: " + str(time.time()))
+		time.sleep(10)
+		f.write("time 2: " + str(time.time()))
+
+	priority_message = 'Prioritize this: ' + log_file
+	q = PubSub.PubSubFactory()
+	message = PubSub.Message_GCP(priority_message)
+	q.publish(WorkSpawnerConfig.priority_topic_name, message )
+
 	exit(0)
