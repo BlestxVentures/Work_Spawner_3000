@@ -40,7 +40,7 @@ def post_process(message):  # things that need to be done after the work is comp
 
 
 def get_work_cmd(message):  # default stub
-	logging.debug('work command for: ', str(message))
+	logging.debug('work command for: ' + str(message))
 
 	# unpack the payload and do any work that needs to be done
 	cmd_to_run = ['python', 'MyWork.py', '--test']  # needs to be something Popen can run.
