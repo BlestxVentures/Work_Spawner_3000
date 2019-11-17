@@ -27,8 +27,10 @@ class Message:
 	# this is required method because used in error handling and reporting
 	def __repr__(self):
 		attr_string = ""
-		for key in self.attributes:
-			attr_string += str(', attr_key:' + str(key) + ' ' + str(self.attributes[key]))
+
+		if self.attributes is not None:
+			for key in self.attributes:
+				attr_string += str(', attr_key:' + str(key) + ' ' + str(self.attributes[key]))
 
 		repr_string = 'message: ' + str(self.body)
 		repr_string += attr_string
