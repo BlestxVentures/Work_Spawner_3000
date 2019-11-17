@@ -26,7 +26,7 @@ def pre_process(message):  # things that need to be done before processing work
 	# payload definition
 	# src directory for the config and starter genomes
 	# copy all files from src directory to ./config/*
-	cmd = ['gsutil', 'cp gs://ws-proto-bucket-1/Bug-World/* .']
+	cmd = ['gsutil', 'cp', 'gs://ws-proto-bucket-1/Bug-World/*', '.']
 
 	logging.info('executing the following command: ' + str(cmd))
 	rv = subprocess.call(cmd)
@@ -45,8 +45,7 @@ def post_process(message):  # things that need to be done after the work is comp
 	base_path = "gs://ws-proto-bucket-1/Bug-World/"
 	curr_time = str(time.time())
 	sim_run_path = base_path + curr_time
-	cmd_args = 'gsutil mv logs/*' + sim_run_path
-	cmd = ['gsutil', cmd_args ]
+	cmd = ['gsutil', 'mv', './logs/*', sim_run_path]
 	logging.info('executing the following command: ' + str(cmd))
 	rv = subprocess.call(cmd)
 	return True  # if everything successful
