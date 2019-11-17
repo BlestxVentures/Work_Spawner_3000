@@ -278,12 +278,12 @@ class PubSub_GCP(PubSub):
 		r_ack_id = message.received_message.ack_id
 		subs = self.ack_paths[message_id]
 		subscription_path = subs['path']
-		ack_ids = [subs['ack_id']]
-
+		ack_id = [subs['ack_id']]
+		ack_ids = [ack_id]
 		logging.debug('subscription path to ack: ' + str(subscription_path))
 		logging.debug('received message ack_id: ' + str(r_ack_id))
 		logging.debug('message_id: ' + str(message_id) + ' ack_id: ' + str(ack_id))
-		self.subscriber.acknowledge(subscription_path, ack_id)
+		self.subscriber.acknowledge(subscription_path, ack_ids)
 		logging.debug('Acknowledged using explicit acknowledge: ' + str(message))
 
 	def log_failed_work(self, message):
