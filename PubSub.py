@@ -229,9 +229,10 @@ class PubSub_GCP(PubSub):
 		for received_message in response.received_messages:
 			ack_id = received_message.ack_id
 			self.ack_paths[received_message.message.message_id] = {'path': subscription_path, 'ack_id': ack_id}
+			logging.debug("Received message: " + str(received_message))
 			message = Message_GCP()
 			message.create_from_received_message(received_message)
-			logging.debug("Received: " + message)
+			logging.debug("message to work with: " + str(message))
 			messages.append(message)
 
 		return messages
