@@ -244,9 +244,9 @@ class PubSub_GCP(PubSub):
 		# received_message: definition google.cloud.pubsub_v1.types.ReceivedMessage
 
 		logging.debug('type of response received: ' + type(response).__name__)
-		logging.debug('type of message received: ' + type(response.received_message).__name__)
 
 		for received_message in response.received_messages:
+			logging.debug('type of message received: ' + type(received_message).__name__)
 			ack_id = received_message.ack_id
 			self.ack_paths[received_message.message.message_id] = {'path': subscription_path, 'ack_id': ack_id}
 			logging.debug("Received message: " + str(received_message))
