@@ -44,7 +44,7 @@ def get_work_cmd(message):  # default stub
 
 	# unpack the payload and do any work that needs to be done
 	cmd_to_run = ['python', 'MyWork.py', '--test']  # needs to be something Popen can run.
-	logging.debug('cmd: ' + cmd_to_run )
+	logging.debug('cmd: ' + str(cmd_to_run ))
 
 	return cmd_to_run
 
