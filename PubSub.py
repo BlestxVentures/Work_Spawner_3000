@@ -135,6 +135,16 @@ class Message_GCP(Message):
 		self.attributes = dict(self.received_message.message.attributes)
 		logging.debug('created a message: ' + str(self))  # base class repr should be able to print this
 
+	def _convert_attributes(self):
+		"""GCP Pubsub requires attributes to be strings when published.  This converts them"""
+		ret_attribs = {}
+
+		for key in self.attributes:
+			ret_attribs[key] = str(self.attributes[key])
+
+		return ret_attribs
+
+
 class PubSub_GCP(PubSub):
 
 	def __init__(self):
@@ -196,7 +206,13 @@ class PubSub_GCP(PubSub):
 		if not message.attributes:
 			logging.debug('attributes are empty')
 
-		future = self.publisher.publish(topic_path, data=payload, attributes=message.attributes)
+		try:
+			# if a Message_GCP, then use function to convert it.  Otherwise assume attribs are strings
+			attribs = message._convert_attributes()
+		except:
+			attribs = message.attributes
+
+		future = self.publisher.publish(topic_path, data=payload, attributes=attribs)
 		logging.debug(future.result())
 
 	def pull(self, topic, max_message_count=1):
