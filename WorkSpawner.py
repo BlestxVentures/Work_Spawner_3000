@@ -146,11 +146,11 @@ def work_spawner():
 		# If we got any messages, spawn a subprocess to handle each message in order received
 		# then start over with the highest priority topic again
 		for message in messages:  # loop through all of the messages and process each one
-			logging.debug('message: ' + message + ' pulled from: ' + str(topic))
+			logging.debug('message: ' + str(message) + ' pulled from: ' + str(topic))
 
 			# perform any work that needs to be done before spawned. e.g., copying files etc.
 			if not spawner.pre_process(message):
-				logging.error('Could not pre_process message' + message)
+				logging.error('Could not pre_process message' + str(message))
 				queue.log_failed_work(message)
 				queue.ack(message)  # ack so that it is pulled off the queue so it won't be processed again
 				continue  # for message loop
@@ -173,7 +173,7 @@ def work_spawner():
 				logging.debug('work finished successfully')
 
 			if not spawner.post_process(message):
-				logging.error('Could not post_process message' + message)
+				logging.error('Could not post_process message' + str(message))
 				queue.log_failed_work(message)
 				queue.ack(message)  # ack so that it is pulled off the queue so it won't be processed again
 				continue  # for message loop
@@ -218,7 +218,7 @@ def work_prioritizer():
 
 		# If we got any messages
 		for message in messages:  # loop through all of the messages and process each one
-			logging.debug('message: ' + message + ' pulled from: ' + str(priority_topic))
+			logging.debug('message: ' + str(message) + ' pulled from: ' + str(priority_topic))
 
 			# use the message to extract a priority. This is done in the user specific MyWork.py.
 			score = prioritizer.prioritize(message)

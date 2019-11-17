@@ -102,7 +102,7 @@ class PubSub:  # base class that describes the implementation independent interf
 
 	# override this method with platform specific methods
 	def log_failed_work(self, message):
-		logging.error('Work failed for message: ' + message)
+		logging.error('Work failed for message: ' + str(message))
 
 	# override this method with platform specific methods
 	def ack(self, message):
@@ -133,7 +133,7 @@ class Message_GCP(Message):
 		self.received_message = received_message  # this has other data stored with it.
 		self.body = self.received_message.message.data.decode('utf-8')
 		self.attributes = dict(self.received_message.message.attributes)
-		logging.debug('created a message: ' + self)  # base class repr should be able to print this
+		logging.debug('created a message: ' + str(self))  # base class repr should be able to print this
 
 class PubSub_GCP(PubSub):
 
@@ -181,7 +181,7 @@ class PubSub_GCP(PubSub):
 		:return: True if successful, False otherwise
 		"""
 
-		logging.debug('publishing message: ' + message)
+		logging.debug('publishing message: ' + str(message))
 
 		# create the full unique path of the topic based on the current project
 		topic_path = self.publisher.topic_path(self.project_id, topic)
@@ -250,11 +250,11 @@ class PubSub_GCP(PubSub):
 
 		try:  # if came from a received message, should have ack() method on it.
 			message.received_message.ack()  # Python PubsubMessage has a method to ack itself
-			logging.debug('Acknowledged using built in ack method: ' + message)
+			logging.debug('Acknowledged using built in ack method: ' + str(message))
 		except Exception:  # try try again
 			subscription_path, ack_id = self.ack_paths[message.message_id]
 			self.subscriber.acknowledge(subscription_path, ack_id)
-			logging.debug('Acknowledged using explicit acknowledge: ' + message)
+			logging.debug('Acknowledged using explicit acknowledge: ' + str(message))
 
 	def log_failed_work(self, message):
 		self.publish(WorkSpawnerConfig.failed_work_topic_name, message)
