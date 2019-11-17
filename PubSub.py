@@ -208,9 +208,11 @@ class PubSub_GCP(PubSub):
 
 		try:
 			# if a Message_GCP, then use function to convert it.  Otherwise assume attribs are strings
+			logging.debug('Converting attributes to string: ', str(message))
 			attribs = message._convert_attributes()
 		except:
-			attribs = message.attributes
+			logging.debug('Force converting attributes to string: ', str(message))
+			attribs = message._convert_attributes()
 
 		future = self.publisher.publish(topic_path, data=payload, attributes=attribs)
 		logging.debug(future.result())
