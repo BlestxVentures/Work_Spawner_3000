@@ -15,7 +15,7 @@ logger.setLevel(logging.INFO)
 #  the dummy implementation is only for testing
 class Message:
 
-	def __init__(self, body, attributes):
+	def __init__(self, body='', attributes={}):
 		"""
 		:param attributes: dict of things passed along with the message in the queue
 		:param body: binary blob of data
@@ -126,7 +126,7 @@ class Message_GCP(Message):
 	"""
 	GCP specific version of Message
 	"""
-	def __init__(self, body='', attributes=None):
+	def __init__(self, body='', attributes={}):
 		self.body = body
 		self.attributes = attributes
 		self.received_message = None  # used to store the full message received if any
