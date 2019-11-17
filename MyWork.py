@@ -115,8 +115,8 @@ if __name__ == "__main__":
 		f.write("time 2: " + str(time.time()))
 
 	priority_message = 'Prioritize this: ' + log_file
-	q = PubSub.PubSubFactory()
+	q = PubSub.PubSubFactory.get_queue()
 	message = PubSub.Message_GCP(priority_message)
-	q.publish(WorkSpawnerConfig.priority_topic_name, message )
+	q.publish(WorkSpawnerConfig.priority_topic_name, message)
 
 	exit(0)
