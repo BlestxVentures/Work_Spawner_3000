@@ -270,16 +270,21 @@ class PubSub_GCP(PubSub):
 		try:  # if came from a received message, should have ack() method on it.
 			message.received_message.ack()  # Python PubsubMessage has a method to ack itself
 			logging.debug('Acknowledged using built in ack method: ' + str(message))
+			return
 		except Exception:  # try try again
-			message_id = message.received_message.message.message_id
-			r_ack_id = message.received_message.ack_id
+			logging.debug('no ack method on received_message')
 
-			subscription_path, ack_id = self.ack_paths[message_id]
-			logging.debug('subscription path to ack: ' + str(subscription_path))
-			logging.debug('received message ack_id: ' + str(r_ack_id))
-			logging.debug('message_id: ' + str(message_id) + ' ack_id: ' + str(ack_id))
-			self.subscriber.acknowledge(subscription_path, ack_id)
-			logging.debug('Acknowledged using explicit acknowledge: ' + str(message))
+		message_id = message.received_message.message.message_id
+		r_ack_id = message.received_message.ack_id
+		subs = self.ack_paths[message_id]
+		subscription_path = subs['path']
+		ack_id = subs['ack_id']
+
+		logging.debug('subscription path to ack: ' + str(subscription_path))
+		logging.debug('received message ack_id: ' + str(r_ack_id))
+		logging.debug('message_id: ' + str(message_id) + ' ack_id: ' + str(ack_id))
+		self.subscriber.acknowledge(subscription_path, ack_id)
+		logging.debug('Acknowledged using explicit acknowledge: ' + str(message))
 
 	def log_failed_work(self, message):
 		self.publish(WorkSpawnerConfig.failed_work_topic_name, message)
