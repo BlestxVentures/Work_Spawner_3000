@@ -228,10 +228,10 @@ class PubSub_GCP(PubSub):
 
 		for received_message in response.received_messages:
 			ack_id = received_message.ack_id
-			self.ack_paths[received_message.message.messageID] = {'path': subscription_path, 'ack_id': ack_id}
-			logging.debug("Received: " + received_message)
+			self.ack_paths[received_message.message.message_id] = {'path': subscription_path, 'ack_id': ack_id}
 			message = Message_GCP()
 			message.create_from_received_message(received_message)
+			logging.debug("Received: " + message)
 			messages.append(message)
 
 		return messages
@@ -251,7 +251,7 @@ class PubSub_GCP(PubSub):
 			message.received_message.ack()  # Python PubsubMessage has a method to ack itself
 			logging.debug('Acknowledged using built in ack method: ' + message)
 		except Exception:  # try try again
-			subscription_path, ack_id = self.ack_paths[message.messageID]
+			subscription_path, ack_id = self.ack_paths[message.message_id]
 			self.subscriber.acknowledge(subscription_path, ack_id)
 			logging.debug('Acknowledged using explicit acknowledge: ' + message)
 

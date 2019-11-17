@@ -18,7 +18,7 @@ import MyWork
 
 # logging format is set in the WorkSpawnerConfig...this changes the level in this file.
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class Spawner:
