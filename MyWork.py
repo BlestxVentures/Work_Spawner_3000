@@ -51,8 +51,12 @@ def get_work_cmd(message):  # default stub
 
 def prioritize(message):  # where the prioritization happens based on the message
 	logging.debug('prioritizing: ' + str(message))
-	rand_int = random.randint(1, 10)
-	logging.debug('generating a random score of: ' + str(rand_int))
+	if 'priority' in message.attributes:
+		rand_int = int(message.attributes['priority'])
+		logging.debug('returning a priority based on an attribute')
+	else:
+		rand_int = random.randint(1, 10)
+		logging.debug('generating a random score of: ' + str(rand_int))
 	return rand_int
 
 
