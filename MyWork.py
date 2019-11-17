@@ -29,7 +29,14 @@ def pre_process(message):  # things that need to be done before processing work
 	cmd = ['gsutil', 'cp', 'gs://ws-proto-bucket-1/Bug-World/*', '.']
 
 	logging.info('executing the following command: ' + str(cmd))
-	rv = subprocess.call(cmd)
+
+	rv = True
+	try:
+		rv = subprocess.call(cmd)
+		if not rv:
+			return True
+	except:
+		rv = False
 
 	return rv  # if everything was successful
 
@@ -47,8 +54,16 @@ def post_process(message):  # things that need to be done after the work is comp
 	sim_run_path = base_path + curr_time
 	cmd = ['gsutil', 'mv', './logs/*', sim_run_path]
 	logging.info('executing the following command: ' + str(cmd))
-	rv = subprocess.call(cmd)
-	return True  # if everything successful
+	rv = True
+	try:
+		rv = subprocess.call(cmd)
+		if not rv:
+			return True
+	except:
+		rv = False
+
+	return rv  # if everything was successful
+
 
 
 def get_work_cmd(message):  # default stub
@@ -93,8 +108,8 @@ if __name__ == "__main__":
 
 	logging.debug("Using normal Work")
 
-	log_file = 'logs/file' + str(time.time())
-	with open(log_file, "w+") as f:
+	log_file = './logs/file' + str(time.time())
+	with open(log_file, "a") as f:
 		f.write("time 1: " + str(time.time()))
 		time.sleep(10)
 		f.write("time 2: " + str(time.time()))
