@@ -27,10 +27,10 @@ class Spawner:
 		self.subprocess = None
 
 	def pre_process(self, message):  # things that need to be done before processing work
-		MyWork.pre_process(message)
+		return MyWork.pre_process(message)
 
 	def post_process(self, message):  # things that need to be done after the work is complete
-		MyWork.post_process(message)
+		return MyWork.post_process(message)
 
 	def get_work_cmd(self, message):
 		return MyWork.get_work_cmd(message)
@@ -146,7 +146,7 @@ def work_spawner():
 		# If we got any messages, spawn a subprocess to handle each message in order received
 		# then start over with the highest priority topic again
 		for message in messages:  # loop through all of the messages and process each one
-			logging.debug('message: ' + str(message) + ' pulled from: ' + str(topic))
+			logging.debug('working with message: ' + str(message) + ' pulled from: ' + str(topic))
 
 			# perform any work that needs to be done before spawned. e.g., copying files etc.
 			if not spawner.pre_process(message):
