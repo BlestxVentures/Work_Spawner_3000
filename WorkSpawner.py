@@ -228,7 +228,8 @@ def work_prioritizer():
 			else:
 				logging.error('could not find a topic to send work to for score: ' + str(score))
 				queue.log_failed_work(message)
-				queue.ack(message)  # make sure it doesn't get processed again
+				
+			queue.ack(message)  # make sure it doesn't get processed again
 
 
 if __name__ == "__main__":
