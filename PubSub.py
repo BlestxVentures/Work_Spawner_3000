@@ -140,7 +140,7 @@ class Message_GCP(Message):
 		ret_attribs = {}
 
 		for key in self.attributes:
-			logging.debug('Type of attribute: ' + str(key) + 'is: ' + type(self.attributes[key]).__name__)
+			logging.debug('Type of attribute: ' + str(key) + ' is: ' + type(self.attributes[key]).__name__)
 			ret_attribs[key] = str(self.attributes[key])
 
 		return ret_attribs
@@ -213,7 +213,7 @@ class PubSub_GCP(PubSub):
 			attribs = message._convert_attributes()
 
 
-		future = self.publisher.publish(topic_path, data=payload, attributes=attribs)
+		future = self.publisher.publish(topic_path, data=payload, **attribs)
 		logging.debug(future.result())
 
 	def pull(self, topic, max_message_count=1):
@@ -243,6 +243,9 @@ class PubSub_GCP(PubSub):
 		# received_messages will be empty if none are available
 		# received_message: definition google.cloud.pubsub_v1.types.ReceivedMessage
 
+		logging.debug('type of response received: ' + type(response).__name__)
+		logging.debug('type of message received: ' + type(response.received_message).__name__)
+
 		for received_message in response.received_messages:
 			ack_id = received_message.ack_id
 			self.ack_paths[received_message.message.message_id] = {'path': subscription_path, 'ack_id': ack_id}
@@ -266,10 +269,10 @@ class PubSub_GCP(PubSub):
 		# Acknowledges the received messages so they will not be sent again.
 
 		try:  # if came from a received message, should have ack() method on it.
-			message.received_message.ack()  # Python PubsubMessage has a method to ack itself
+			message.received_message.message.ack()  # Python PubsubMessage has a method to ack itself
 			logging.debug('Acknowledged using built in ack method: ' + str(message))
 		except Exception:  # try try again
-			subscription_path, ack_id = self.ack_paths[message.message_id]
+			subscription_path, ack_id = self.ack_paths[message.received_message.message_id]
 			self.subscriber.acknowledge(subscription_path, ack_id)
 			logging.debug('Acknowledged using explicit acknowledge: ' + str(message))
 
