@@ -170,7 +170,7 @@ def work_spawner():
 				queue.log_failed_work(message)
 				queue.ack(message)  # ack so that it is pulled off the queue so it won't be processed again
 			else:
-				logging.debug('work finished successfully')
+				logging.info('work finished successfully')
 
 			if not spawner.post_process(message):
 				logging.error('Could not post_process message' + str(message))

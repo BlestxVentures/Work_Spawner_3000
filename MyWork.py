@@ -38,6 +38,7 @@ def pre_process(message):  # things that need to be done before processing work
 	except:
 		rv = False
 
+	logging.debug('returning: ' + str(rv))
 	return rv  # if everything was successful
 
 
@@ -62,6 +63,7 @@ def post_process(message):  # things that need to be done after the work is comp
 	except:
 		rv = False
 
+	logging.debug('returning: ' + str(rv))
 	return rv  # if everything was successful
 
 
@@ -108,11 +110,11 @@ if __name__ == "__main__":
 
 	logging.debug("Using normal Work")
 
-	log_file = './logs/file' + str(time.time())
+	log_file = './logs/file-' + str(time.time())
 	with open(log_file, "a") as f:
-		f.write("time 1: " + str(time.time()))
+		f.write("time 1: " + str(time.time()) + '\n')
 		time.sleep(10)
-		f.write("time 2: " + str(time.time()))
+		f.write("time 2: " + str(time.time()) + '\n')
 
 	priority_message = 'Prioritize this: ' + log_file
 	q = PubSub.PubSubFactory.get_queue()
