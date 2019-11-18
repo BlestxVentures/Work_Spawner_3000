@@ -17,7 +17,7 @@ import MyWorkConfig
 
 # logging format is set in the WorkSpawnerConfig...this changes the level in this file.
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 # stateless re-entrant functions
@@ -100,7 +100,7 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 
 	if args.test:
-		logging.debug("Using Test Work")
+		logging.info("Using Test Work")
 		time.sleep(1)  # work for a minute
 		print('Here is what it is before: ', WorkSpawnerConfig.TEST_MODE)
 		r = ConceptTester.test_that_concept_thangy(WorkSpawnerConfig.TEST_MODE)
@@ -108,12 +108,12 @@ if __name__ == "__main__":
 		print('Here is what it is now: ', WorkSpawnerConfig.TEST_MODE)
 		exit(0)  # exit successfully
 
-	logging.debug("Using normal Work")
+	logging.info("Using normal Work")
 
 	log_file = './logs/file-' + str(time.time())
 	with open(log_file, "a") as f:
 		f.write("time 1: " + str(time.time()) + '\n')
-		time.sleep(10)
+		time.sleep(1)
 		f.write("time 2: " + str(time.time()) + '\n')
 
 	priority_message = 'Prioritize this: ' + log_file
