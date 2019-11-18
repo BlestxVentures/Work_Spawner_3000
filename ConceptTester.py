@@ -1,12 +1,19 @@
+import logging
+import time
 
 import WorkSpawnerConfig
 
+# logging format is set in the WorkSpawnerConfig...this changes the level in this file.
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
-def test_that_concept_thangy(passed_flag):
 
-	print('ok, here is what got passed: ', passed_flag)
-	print('here is what is in config file: :', WorkSpawnerConfig.TEST_MODE)
-	WorkSpawnerConfig.TEST_MODE = not passed_flag
-	print('here is what it is after flipping it: :', WorkSpawnerConfig.TEST_MODE)
-	return WorkSpawnerConfig.TEST_MODE
+if __name__ == "__main__":
 
+	logging.info("Using ConceptTester Work")
+
+	log_file = './logs/file-' + str(time.time())
+	with open(log_file, "a") as f:
+		f.write("time 1: " + str(time.time()) + '\n')
+		time.sleep(1)
+		f.write("time 2: " + str(time.time()) + '\n')

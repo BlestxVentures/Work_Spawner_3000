@@ -58,14 +58,18 @@ def post_process(message):  # things that need to be done after the work is comp
 	rv = True
 	try:
 		rv = subprocess.call(cmd)
-		if not rv:
-			return True
 	except:
-		rv = False
+		return False
+
+	if not rv:
+		# if the copy worked, prioritize the work for next loop
+		priority_message = 'Prioritize this: ' + sim_run_path
+		q = PubSub.PubSubFactory.get_queue()
+		message = PubSub.Message_GCP(priority_message)
+		q.publish(WorkSpawnerConfig.priority_topic_name, message)
 
 	logging.debug('returning: ' + str(rv))
 	return rv  # if everything was successful
-
 
 
 def get_work_cmd(message):  # default stub
@@ -73,7 +77,9 @@ def get_work_cmd(message):  # default stub
 
 	# unpack the payload and do any work that needs to be done
 	#cmd_to_run = ['python', 'MyWork.py', '--test']  # needs to be something Popen can run.
-	cmd_to_run = ['python', 'MyWork.py']  # needs to be something Popen can run.
+	#cmd_to_run = ['python', 'MyWork.py']  # needs to be something Popen can run.
+	cmd_to_run = ['python', 'ConceptTester.py']  # needs to be something Popen can run.
+
 	logging.debug('cmd: ' + str(cmd_to_run ))
 
 	return cmd_to_run
@@ -90,7 +96,7 @@ def prioritize(message):  # where the prioritization happens based on the messag
 	return rand_int
 
 
-import ConceptTester
+
 if __name__ == "__main__":
 
 	logging.info('Started the work')
@@ -102,23 +108,5 @@ if __name__ == "__main__":
 	if args.test:
 		logging.info("Using Test Work")
 		time.sleep(1)  # work for a minute
-		print('Here is what it is before: ', WorkSpawnerConfig.TEST_MODE)
-		r = ConceptTester.test_that_concept_thangy(WorkSpawnerConfig.TEST_MODE)
-		print('Here is what what passed back', r)
-		print('Here is what it is now: ', WorkSpawnerConfig.TEST_MODE)
 		exit(0)  # exit successfully
 
-	logging.info("Using normal Work")
-
-	log_file = './logs/file-' + str(time.time())
-	with open(log_file, "a") as f:
-		f.write("time 1: " + str(time.time()) + '\n')
-		time.sleep(1)
-		f.write("time 2: " + str(time.time()) + '\n')
-
-	priority_message = 'Prioritize this: ' + log_file
-	q = PubSub.PubSubFactory.get_queue()
-	message = PubSub.Message_GCP(priority_message)
-	q.publish(WorkSpawnerConfig.priority_topic_name, message)
-
-	exit(0)
