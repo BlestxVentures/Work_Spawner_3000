@@ -27,15 +27,17 @@ def pre_process(message):  # things that need to be done before processing work
 	# src directory for the config and starter genomes
 	# copy all files from src directory to ./config/*
 	cmd = ['gsutil', 'cp', '-r', 'gs://ws-proto-bucket-1/Bug-World/config/*', './config/']
-
 	logging.info('executing the following command: ' + str(cmd))
 
-	rv = True
 	try:
 		rv = subprocess.call(cmd)
+		logging.debug('command completed without exception')
 		if not rv:
-			return True
+			rv = True
+		else:
+			rv = False
 	except:
+		logging.error('command threw an exception')
 		rv = False
 
 	logging.debug('returning: ' + str(rv))
@@ -43,6 +45,11 @@ def pre_process(message):  # things that need to be done before processing work
 
 
 def post_process(message):  # things that need to be done after the work is complete
+	"""
+	:param message: PubSub message to that was used for processing
+	:return: True if everything was successful
+	"""
+
 	logging.debug('post_processing: ' + str(message))
 
 	# unpack the payload and do any work that needs to be done
@@ -55,13 +62,19 @@ def post_process(message):  # things that need to be done after the work is comp
 	sim_run_path = base_path + curr_time
 	cmd = ['gsutil', 'mv', './logs/*', sim_run_path]
 	logging.info('executing the following command: ' + str(cmd))
-	rv = True
 	try:
 		rv = subprocess.call(cmd)
+		logging.debug('command completed without exception')
+		if not rv:
+			rv = True
+		else:
+			rv = False
 	except:
-		return False
+		logging.error('command threw an exception')
+		rv = False
 
-	if not rv:
+	if rv:
+		logging.debug('command was successful')
 		# if the copy worked, prioritize the work for next loop
 		priority_message = 'Prioritize this: ' + sim_run_path
 		q = PubSub.PubSubFactory.get_queue()
