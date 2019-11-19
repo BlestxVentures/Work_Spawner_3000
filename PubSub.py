@@ -311,7 +311,7 @@ class PubSub_GCP(PubSub):
 
 		# ack_deadline_seconds must be between 10 to 600.
 		self.subscriber.modify_ack_deadline(subscription_path, [ack_id], ack_deadline_seconds=60)
-		logging.info('Reset ack deadline for: ' + str(message))
+		logging.debug('Reset ack deadline for: ' + str(message))
 
 
 def log_failed_work(self, message):

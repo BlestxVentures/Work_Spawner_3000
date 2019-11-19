@@ -54,7 +54,7 @@ class Spawner:
 			return False
 		else:  # process completed and returned a return code
 			exitcode = self.subprocess.terminate()
-			if not exitcode:  # even if successfully terminated, return an error due to time out
+			if exitcode:  # even if successfully terminated, return an error due to time out
 				raise Exception('subprocess returned an error code of: ' + str(exitcode))
 
 		return True
