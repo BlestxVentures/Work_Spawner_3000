@@ -109,7 +109,6 @@ def prioritize(message):  # where the prioritization happens based on the messag
 	return rand_int
 
 
-
 if __name__ == "__main__":
 
 	logging.info('Started the work')
