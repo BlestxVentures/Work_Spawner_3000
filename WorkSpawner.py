@@ -48,6 +48,17 @@ class Spawner:
 		self.subprocess = Popen(cmd)  # default hook to start work.
 		logging.info('spawned subprocess: ' + str(self.subprocess.pid))
 
+	def is_spawn_done(self):
+		rc = self.subprocess.poll()  # returns None if not done, else returns error code from subprocess
+		if rc is None:  # process isn't done
+			return False
+		else:  # process completed and returned a return code
+			exitcode = self.subprocess.terminate()
+			if not exitcode:  # even if successfully terminated, return an error due to time out
+				raise Exception('subprocess returned an error code of: ' + str(exitcode))
+
+		return True
+
 	def wait(self, timeout):
 		"""wait for a subprocess to be done or it times out
 		:param timeout: number of seconds to wait for work to be done, otherwise stop. if zero, will wait forever
@@ -81,6 +92,8 @@ class Spawner:
 
 		return exitcode
 
+	def terminate(self):
+		self.subprocess.terminate()
 
 def work_spawner():
 	"""
@@ -139,6 +152,9 @@ def work_spawner():
 		for message in messages:  # loop through all of the messages and process each one
 			logging.info('working with message: ' + str(message) + ' pulled from: ' + str(topic))
 
+			# reset queue ack timeout.  that is how long pre_process has to finish
+			queue.keep_alive(message)
+
 			# perform any work that needs to be done before spawned. e.g., copying files etc.
 			if not spawner.pre_process(message):
 				logging.error('Could not pre_process message' + str(message))
@@ -155,13 +171,37 @@ def work_spawner():
 				# spawn as a shell process
 				spawner.spawn_shell(message)
 
+			process_done = False
+			timeout_ctr = WorkSpawnerConfig.WAIT_TIMEOUT
+			start_time = time.time()
+
+			while not process_done:
+				# update so queue ack doesn't timeout
+				queue.keep_alive(message)
+
+				time_delta = time.time() - start_time
+				timeout_ctr -= time_delta  # decrement the timeout counter
+
+				if timeout_ctr <= 0:
+					spawner.terminate()
+					logging.error('worker timed out')
+					queue.log_failed_work(message)
+					queue.ack(message)  # ack so that it is pulled off the queue so it won't be processed again
+					process_done = True
+					continue
+
+				try:
+					process_done = spawner.is_spawn_done()
+				except Exception as error:
+					logging.error(error)
+
+				time.sleep(5)  # how often to check the subprocess
+
 			# wait for the subprocess to error or time out
-			if spawner.wait(WorkSpawnerConfig.WAIT_TIMEOUT):  # wait this many seconds at most to finish
-				logging.error('worker error or timed out')
-				queue.log_failed_work(message)
-				queue.ack(message)  # ack so that it is pulled off the queue so it won't be processed again
-			else:
-				logging.info('work finished successfully')
+			logging.info('work finished successfully')
+
+			# reset queue ack timeout.  that is how long post_process has to finish
+			queue.keep_alive(message)
 
 			if not spawner.post_process(message):
 				logging.error('Could not post_process message: ' + str(message))
@@ -171,7 +211,7 @@ def work_spawner():
 
 			queue.ack(message)  # acknowledge the message if successfully processed
 
-		index = 0  # reset the index back to the highest priority queue so that work is always \
+		index = 0  # reset the index back to the highest priority queue so that work is always
 					# pulled from there first
 
 

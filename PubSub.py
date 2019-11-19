@@ -319,6 +319,7 @@ def log_failed_work(self, message):
 	#  failed_work_topic_name = tr.get_failed_topic()
 	self.publish(WorkSpawnerConfig.failed_work_topic_name, message)
 
+
 # ---- Used to abstract the instantiation of the platform specific class ----
 class PubSubFactory:
 
