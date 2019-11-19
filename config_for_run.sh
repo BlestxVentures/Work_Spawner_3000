@@ -15,10 +15,8 @@ sudo apt-get upgrade -y
 sudo apt-get install python3.7
 
 # install pip
-sudo apt-get install -y python-pip
+sudo apt-get install -y python3-pip
 
-# upgrade to the latest version of pip (required for Tensorflow 2)
-pip install --upgrade pip
 
 # get the virtual env stuff
 sudo apt-get install python3-venv
@@ -29,14 +27,16 @@ sudo apt-get install python3.7-venv
 # sudo apt-get sublime
 
 
-# create a virtual env called <src>
-# python3 -m venv <src>
+# create a virtual env called <env>
+# python3 -m venv <env>
 
 # activate venv
-# source <src>/bin/activate
+# source <env>/bin/activate
 
 
 # now all pip installs will happen in venv
+# upgrade to the latest version of pip (required for Tensorflow 2)
+pip install --upgrade pip
 
 # use pip freeze to find out packages
 # use pip install requirements.txt to load all packages in file

@@ -19,6 +19,7 @@ Setup
 Required Modules:
 - google-cloud
 - google-api-core
+- google-cloud-pubsub
 
 PubSub Requirements:
 - must create a topic for each topic listed in PubSubTopics.csv
