@@ -102,6 +102,15 @@ class PubSub:  # base class that describes the implementation independent interf
 
 		return messages[:max_message_count]  # return a subset of those messages
 
+	# override this method
+	def keep_alive(self, message):
+		"""
+		used to keep long running messages timing out for not being acknowledged
+		:param message:
+		:return: None
+		"""
+		logging.debug('stayin alive!')
+
 	# override this method with platform specific methods
 	def log_failed_work(self, message):
 		logging.error('Work failed for message: ' + str(message))
@@ -137,7 +146,7 @@ class Message_GCP(Message):
 		self.attributes = dict(self.received_message.message.attributes)
 		logging.debug('created a message: ' + str(self))  # base class repr should be able to print this
 
-	def _convert_attributes(self):
+	def convert_attributes(self):
 		"""GCP Pubsub requires attributes to be strings when published.  This converts them"""
 		ret_attribs = {}
 
@@ -212,7 +221,7 @@ class PubSub_GCP(PubSub):
 		if isinstance(message, Message_GCP):
 			# if a Message_GCP, then use function to convert it.  Otherwise assume attribs are strings
 			logging.debug('Converting attributes to string: ' + str(message))
-			attribs = message._convert_attributes()
+			attribs = message.convert_attributes()
 
 
 		future = self.publisher.publish(topic_path, data=payload, **attribs)
@@ -288,9 +297,27 @@ class PubSub_GCP(PubSub):
 		self.subscriber.acknowledge(subscription_path, ack_ids)
 		logging.debug('Acknowledged using explicit acknowledge: ' + str(message))
 
-	def log_failed_work(self, message):
-		self.publish(WorkSpawnerConfig.failed_work_topic_name, message)
+	def keep_alive(self, message):
+		# look up subscription
+		# see how long the timeout is
+		# add to rcvd time
+		# if close, reset the ack timeout
+		# https://cloud.google.com/pubsub/docs/pull
 
+		message_id = message.received_message.message.message_id
+		subs = self.ack_paths[message_id]
+		subscription_path = subs['path']
+		ack_id = subs['ack_id']
+
+		# ack_deadline_seconds must be between 10 to 600.
+		self.subscriber.modify_ack_deadline(subscription_path, [ack_id], ack_deadline_seconds=60)
+		logging.info('Reset ack deadline for: ' + str(message))
+
+
+def log_failed_work(self, message):
+	# TODO: abstract this into class
+	#  failed_work_topic_name = tr.get_failed_topic()
+	self.publish(WorkSpawnerConfig.failed_work_topic_name, message)
 
 # ---- Used to abstract the instantiation of the platform specific class ----
 class PubSubFactory:

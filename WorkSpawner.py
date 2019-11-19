@@ -82,21 +82,17 @@ class Spawner:
 		return exitcode
 
 
-# read used to assign work to different priority queues
-class Prioritizer:
-
-	def __init_(self):
-		pass
-
-	def prioritize(self, message):
-		return MyWork.prioritize(message)
-
-
 def work_spawner():
 	"""
 	Look up work queues, pull work off highest queues down to lowest queues, invoke user specific work
 	:return: none, will exit if errors out
 	"""
+
+	# Use instances so could parallel process in a future version
+	spawner = Spawner()
+
+	# get implementation specific instance
+	queue = PubSub.PubSubFactory.get_queue()
 
 	# function to call if the process gets killed or interrupted
 	def signal_handler(sig, frame):
@@ -106,13 +102,8 @@ def work_spawner():
 	# handle CTRL-C to stop subprocess
 	signal.signal(signal.SIGINT, signal_handler)
 
-	# Use instances so could parallel process in a future version
-	spawner = Spawner()
-
-	# get implementation specific instance
-	queue = PubSub.PubSubFactory.get_queue()
-
-	# topics are arranged highest to lowest
+	# interface to queue topics
+	# reads in upon instantiation
 	tr = TopicReader.Topics()
 	if not tr:
 		logging.error('No topics found')
@@ -185,6 +176,13 @@ def work_spawner():
 
 
 def work_prioritizer():
+	"""
+	Pull work from the "work to prioritize queue"
+	Score it using a user defined function
+	Look up the appropriate work queue using the score to find priority
+	Put on on the work queu
+	:return: None, will exit if error
+	"""
 	def signal_handler(sig, frame):
 		logging.info('work_prioritizer is being terminated')
 		sys.exit(0)
@@ -192,20 +190,20 @@ def work_prioritizer():
 	# handle CTRL-C to stop subprocess
 	signal.signal(signal.SIGINT, signal_handler)
 
-	# use instance for now, eventually will multiprocess
-	prioritizer = Prioritizer()
+	# instantiate the queue in interface
 	queue = PubSub.PubSubFactory.get_queue()
 
-	# always load the topics in case they have changed
 	# topics are arranged highest to lowest
 	tr = TopicReader.Topics()
 	if not tr:
 		logging.error('No topics found')
 		exit(-1)
 
-	priority_topic = tr.get_priority_topic()  # get the topic where work to be prioritized is queued
+	# get the topic where work to be prioritized is queued
+	priority_topic = tr.get_priority_topic()
 
 	while True:
+		# TODO: always load the topics in case they have changed?  wait until using memory cache
 
 		# pull next work to prioritize
 		logging.debug('Pulling work from priority_topic: ' + priority_topic)
@@ -221,7 +219,7 @@ def work_prioritizer():
 			logging.debug('message: ' + str(message) + ' pulled from: ' + str(priority_topic))
 
 			# use the message to extract a priority. This is done in the user specific MyWork.py.
-			score = prioritizer.prioritize(message)
+			score = MyWork.prioritize(message)
 			topic_to_publish_on = tr.get_topic(score)
 			if topic_to_publish_on:
 				logging.info('publishing: ' + str(message) + ' on topic: ' + str(topic_to_publish_on))

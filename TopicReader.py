@@ -120,8 +120,10 @@ class Topics:
 		return topic 	# will default to returning the lowest priority topic as a catch all
 
 	def get_priority_topic(self):
-		self.priority_topic_name = WorkSpawnerConfig.priority_topic_name
 		return self.priority_topic_name
+
+	def get_failed_work_topic(self):
+		return self.failed_work_topic_name
 
 
 # For testing code only
