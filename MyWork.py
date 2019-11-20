@@ -92,10 +92,10 @@ def get_work_cmd(message):  # default stub
 	#cmd_to_run = ['python', 'MyWork.py', '--test']  # needs to be something Popen can run.
 	#cmd_to_run = ['python', 'MyWork.py']  # needs to be something Popen can run.
 	cmd_to_run = ['python', 'ConceptTester.py']  # needs to be something Popen can run.
+	cwd = None  # the directory to change to before the command is run
+	logging.debug('cmd: ' + str(cmd_to_run) + ' in dir: ' + cwd)
 
-	logging.debug('cmd: ' + str(cmd_to_run ))
-
-	return cmd_to_run
+	return cmd_to_run, cwd
 
 
 def prioritize(message):  # where the prioritization happens based on the message
