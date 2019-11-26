@@ -9,10 +9,13 @@ Usage:
     topic_file = location to find the topic file to read in.  By default it is PubSubTopics.csv
 
 Run:
+
 --> on a vm_instance where installed and work exists, use this to pull work and spawn it
+
 $ python3 WorkSpawner.py --spawner &
 
 --> on any vm_instance, only need one of these to persistently run to monitor work queue and prioritize
+
 $ python3 WorkSpawner.py --prioritize &
 
 Setup

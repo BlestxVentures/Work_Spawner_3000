@@ -45,7 +45,7 @@ class Spawner:
 		cmd, cwd = self.get_work_cmd(message)
 
 		logging.debug('shell cmd: ' + str(cmd))
-		self.subprocess = Popen(cmd, cwd=cwd)  # default hook to start work.
+		self.subprocess = Popen(cmd,cwd=cwd)  # default hook to start work.
 		logging.info('spawned subprocess: ' + str(self.subprocess.pid))
 
 	def is_spawn_done(self):
