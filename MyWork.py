@@ -24,9 +24,14 @@ logger.setLevel(logging.INFO)
 def pre_process(message):  # things that need to be done before processing work
 	logging.debug('pre_processing: ' + str(message))
 	# payload definition
+	# parse starter config and starter genome
+
 	# src directory for the config and starter genomes
-	# copy all files from src directory to ./config/*
-	cmd = ['gsutil', 'cp', '-r', 'gs://ws-proto-bucket-1/Bug-World/config/*', './config/']
+	# copy all files from src directory to ./config/
+	bucket = WorkSpawnerConfig.DEFAULT_BUCKET_NAME
+	src_file = 'gs://' + bucket + '/config/*'
+	dest_file = '../Bug-World/config/'
+	cmd = ['gsutil', 'cp', '-r', src_file, dest_file ]
 	logging.info('executing the following command: ' + str(cmd))
 
 	try:
@@ -57,10 +62,10 @@ def post_process(message):  # things that need to be done after the work is comp
 	# construct destination directory root
 	# use gsutils to mv all directories from ./logs/*
 	#https://cloud.google.com/storage/docs/gsutil/commands/cp
-	base_path = "gs://ws-proto-bucket-1/Bug-World/logs/"
-	curr_time = str(time.time())
-	sim_run_path = base_path + curr_time
-	cmd = ['gsutil', 'mv', './logs/*', sim_run_path]
+
+	bucket = WorkSpawnerConfig.DEFAULT_BUCKET_NAME 
+	base_path = 'gs://' + bucket + '/Bug-World/logs/'
+	cmd = ['gsutil', 'mv', '../Bug-World/logs/', base_path]
 	logging.info('executing the following command: ' + str(cmd))
 	try:
 		rv = subprocess.call(cmd)
@@ -76,7 +81,7 @@ def post_process(message):  # things that need to be done after the work is comp
 	if rv:
 		logging.debug('command was successful')
 		# if the copy worked, prioritize the work for next loop
-		priority_message = 'Prioritize this: ' + sim_run_path
+		priority_message = 'Prioritize this: ' + base_path
 		q = PubSub.PubSubFactory.get_queue()
 		message = PubSub.Message_GCP(priority_message)
 		q.publish(WorkSpawnerConfig.priority_topic_name, message)
@@ -91,11 +96,12 @@ def get_work_cmd(message):  # default stub
 	# unpack the payload and do any work that needs to be done
 	#cmd_to_run = ['python', 'MyWork.py', '--test']  # needs to be something Popen can run.
 	#cmd_to_run = ['python', 'MyWork.py']  # needs to be something Popen can run.
-	cmd_to_run = ['python', 'ConceptTester.py']  # needs to be something Popen can run.
+	cmd_to_run = ['python', 'main.py', '--nodisplay']  # needs to be something Popen can run.
 
-	logging.debug('cmd: ' + str(cmd_to_run ))
+	cwd = '../Bug-World'
+	logging.debug('cmd: ' + str(cmd_to_run ) + ' in dir: ' + cwd )
 
-	return cmd_to_run
+	return cmd_to_run, cwd
 
 
 def prioritize(message):  # where the prioritization happens based on the message
