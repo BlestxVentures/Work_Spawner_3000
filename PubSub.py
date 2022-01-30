@@ -243,7 +243,8 @@ class PubSub_GCP(PubSub):
 
 		# The subscriber attempts to pull all of the messages up to the max.
 		try:
-			response = self.subscriber.pull(subscription_path, return_immediately=True, max_messages=max_message_count)
+			response = self.subscriber.pull(request={"subscription": subscription_path, "max_messages": max_message_count})
+
 		except DeadlineExceeded:  # deadline is set at the subscription level.  if no work available by deadline, return
 			return messages  # should be empty
 		except NotFound:
