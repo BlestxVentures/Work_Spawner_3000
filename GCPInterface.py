@@ -44,7 +44,6 @@ read from topic file and create topics if don't exist
 # standard python stuff
 import argparse
 import logging
-import os
 
 # google cloud specific
 from google.cloud import storage

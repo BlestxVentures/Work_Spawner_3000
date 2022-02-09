@@ -180,9 +180,8 @@ def work_spawner():
 				queue.keep_alive(message)
 
 				time_delta = time.time() - start_time
-				timeout_ctr -= time_delta  # decrement the timeout counter
 
-				if timeout_ctr <= 0:
+				if timeout_ctr - time_delta <= 0:
 					spawner.terminate()
 					logging.error('worker timed out')
 					queue.log_failed_work(message)
@@ -220,7 +219,7 @@ def work_prioritizer():
 	Pull work from the "work to prioritize queue"
 	Score it using a user defined function
 	Look up the appropriate work queue using the score to find priority
-	Put on on the work queu
+	Put on the work queue
 	:return: None, will exit if error
 	"""
 	def signal_handler(sig, frame):
