@@ -295,7 +295,8 @@ class PubSub_GCP(PubSub):
 		logging.debug('subscription path to ack: ' + str(subscription_path))
 		logging.debug('received message ack_id: ' + str(r_ack_id))
 		logging.debug('going to ack message_id: ' + str(message_id) + ' ack_id: ' + str(ack_id))
-		self.subscriber.acknowledge(subscription_path, ack_ids)
+		self.subscriber.acknowledge(
+			request={"subscription": subscription_path, "ack_ids": ack_ids})
 		logging.debug('Acknowledged using explicit acknowledge: ' + str(message))
 
 	def keep_alive(self, message):
