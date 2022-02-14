@@ -313,7 +313,7 @@ class PubSub_GCP(PubSub):
 
 		# ack_deadline_seconds must be between 10 to 600.
 		self.subscriber.modify_ack_deadline(
-			request={"subscription": subscription_path, "ack_ids": ack_id, "ack_deadline_seconds": 60 })
+			request={"subscription": subscription_path, "ack_ids": [ack_id], "ack_deadline_seconds": 60 })
 
 		logging.debug('Reset ack deadline for: ' + str(message))
 
