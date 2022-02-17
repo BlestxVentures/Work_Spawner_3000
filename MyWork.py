@@ -31,7 +31,7 @@ def pre_process(message):  # things that need to be done before processing work
 	bucket = WorkSpawnerConfig.DEFAULT_BUCKET_NAME
 	src_file = 'gs://' + bucket + '/config/*'
 	dest_file = '../Bug-World/config/'
-	cmd = ['gsutil', 'cp', '-r', src_file, dest_file ]
+	cmd = ['gsutil', 'cp', '-r', src_file, dest_file]
 	logging.info('executing the following command: ' + str(cmd))
 
 	try:
@@ -61,7 +61,7 @@ def post_process(message):  # things that need to be done after the work is comp
 	# get machine name
 	# construct destination directory root
 	# use gsutils to mv all directories from ./logs/*
-	#https://cloud.google.com/storage/docs/gsutil/commands/cp
+	# https://cloud.google.com/storage/docs/gsutil/commands/cp
 
 	bucket = WorkSpawnerConfig.DEFAULT_BUCKET_NAME 
 	base_path = 'gs://' + bucket + '/Bug-World/logs/'
@@ -94,12 +94,12 @@ def get_work_cmd(message):  # default stub
 	logging.debug('work command for: ' + str(message))
 
 	# unpack the payload and do any work that needs to be done
-	#cmd_to_run = ['python', 'MyWork.py', '--test']  # needs to be something Popen can run.
-	#cmd_to_run = ['python', 'MyWork.py']  # needs to be something Popen can run.
+	# cmd_to_run = ['python', 'MyWork.py', '--test']  # needs to be something Popen can run.
+	# cmd_to_run = ['python', 'MyWork.py']  # needs to be something Popen can run.
 	cmd_to_run = ['python', 'main.py', '--nodisplay']  # needs to be something Popen can run.
 
 	cwd = '../Bug-World'
-	logging.debug('cmd: ' + str(cmd_to_run ) + ' in dir: ' + cwd )
+	logging.debug('cmd: ' + str(cmd_to_run) + ' in dir: ' + cwd)
 
 	return cmd_to_run, cwd
 
@@ -127,4 +127,3 @@ if __name__ == "__main__":
 		logging.info("Using Test Work")
 		time.sleep(1)  # work for a minute
 		exit(0)  # exit successfully
-
